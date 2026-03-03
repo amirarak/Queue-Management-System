@@ -1,8 +1,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export function useTime() {
+  const { locale } = useI18n()
   const currentTime = ref(new Date())
-
   let timer = null
 
   onMounted(() => {
@@ -12,9 +13,7 @@ export function useTime() {
   })
 
   onUnmounted(() => {
-    if (timer) {
-      clearInterval(timer)
-    }
+    if (timer) clearInterval(timer)
   })
 
   const formattedTime = computed(() => {
@@ -25,16 +24,22 @@ export function useTime() {
   })
 
   const formattedDate = computed(() => {
-    return currentTime.value.toLocaleDateString('ru-RU', {
+    const loc = locale.value === 'en' ? 'en-US' : locale.value === 'ky' ? 'ky-KG' : 'ru-RU'
+    return currentTime.value.toLocaleDateString(loc, {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     })
   })
 
-  return {
-    currentTime,
-    formattedTime,
-    formattedDate
+
+  function formatLocalTime(utcDateStr) {
+    if (!utcDateStr) return ''
+    return new Date(utcDateStr).toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
+
+  return { currentTime, formattedTime, formattedDate, formatLocalTime }
 }

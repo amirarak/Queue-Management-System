@@ -1,6 +1,4 @@
-/**
- * Форматирование времени
- */
+
 export function formatTime(date) {
   return new Date(date).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
@@ -9,9 +7,7 @@ export function formatTime(date) {
   })
 }
 
-/**
- * Форматирование даты
- */
+
 export function formatDate(date) {
   return new Date(date).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -20,23 +16,16 @@ export function formatDate(date) {
   })
 }
 
-/**
- * Генерация уникального ID
- */
 export function generateId() {
   return Date.now() + Math.random().toString(36).substr(2, 9)
 }
 
-/**
- * Задержка (для асинхронных операций)
- */
+
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-/**
- * Проверка статуса билета
- */
+
 export function isTicketWaiting(ticket) {
   return ticket.status === 'waiting'
 }
