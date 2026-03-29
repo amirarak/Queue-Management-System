@@ -42,9 +42,9 @@
           </div>
 
           <div class="forgot-row">
-            <button type="button" class="forgot-link" @click="showForgot = true">
+            <router-link to="/forgot-password" class="forgot-link">
               {{ t('login.forgotPassword') }}
-            </button>
+            </router-link>
           </div>
 
           <div v-if="authStore.error" class="alert-error">{{ authStore.error }}</div>
@@ -59,24 +59,11 @@
         </div>
       </div>
     </div>
-    <Transition name="modal-fade">
-      <div v-if="showForgot" class="modal-overlay" @click.self="showForgot = false">
-        <div class="modal-box">
-          <div class="modal-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
-          <h2 class="modal-title">{{ t('login.forgotTitle') }}</h2>
-          <p class="modal-text">{{ t('login.forgotText') }}</p>
-          <div class="modal-contact">{{ t('login.forgotContact') }}</div>
-          <button class="modal-close-btn" @click="showForgot = false">{{ t('login.forgotClose') }}</button>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/authStore'
@@ -88,17 +75,14 @@ const authStore = useAuthStore()
 
 const formData = reactive({ username: '', password: '' })
 const errors = reactive({ username: '', password: '' })
-const showForgot = ref(false)
 
 const validateForm = () => {
   errors.username = ''
   errors.password = ''
   let isValid = true
-
   if (!formData.username) { errors.username = t('login.emailRequired'); isValid = false }
   else if (!formData.username.endsWith('@alatoo.edu.kg')) { errors.username = t('login.emailInvalid'); isValid = false }
   if (!formData.password) { errors.password = t('login.passwordRequired'); isValid = false }
-
   return isValid
 }
 
@@ -158,16 +142,10 @@ const handleLogin = async () => {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .forgot-row { display: flex; justify-content: flex-end; margin: -10px 0 18px; }
-.forgot-link { background: none; border: none; color: #dc2626; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+.forgot-link {
+  color: #dc2626; font-size: 13px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; transition: color 0.2s;
+}
 .forgot-link:hover { color: #b91c1c; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-.modal-box { background: white; border-radius: 18px; padding: 42px 36px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
-.modal-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; }
-.modal-title { font-size: 20px; font-weight: 700; color: #1a2332; margin: 0 0 10px; }
-.modal-text { font-size: 14px; color: #555; margin: 0 0 16px; line-height: 1.6; }
-.modal-contact { font-size: 13px; font-weight: 600; color: #1a2332; background: #f8f9fb; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 0 0 24px; }
-.modal-close-btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 700; color: white; background: #dc2626; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; }
-.modal-close-btn:hover { background: #b91c1c; }
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 </style>

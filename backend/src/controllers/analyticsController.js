@@ -12,24 +12,18 @@ function getDayBoundsLocal(date = new Date()) {
   return { start, end };
 }
 
-function formatMinutes(secs) {
-  if (!secs || secs <= 0) return '—';
-  if (secs < 60) return `${Math.round(secs)} сек`;
-  return `${Math.round(secs / 60)} мин`;
+function formatSeconds(secs) {
+  if (!secs || secs <= 0) return null;
+  return Math.round(secs);
 }
 
 const MAX_SERVICE_SECS = 120 * 60;
-const MAX_WAIT_SECS = 240 * 60;
+const MAX_WAIT_SECS    = 240 * 60;
 
 async function getStats(where) {
   const tickets = await Ticket.findAll({
     where,
-    include: [{
-      model: User,
-      as: 'server',
-      attributes: ['id', 'fullName'],
-      required: false
-    }],
+    include: [{ model: User, as: 'server', attributes: ['id','fullName'], required: false }],
     order: [['createdAt', 'DESC']],
     raw: false
   });
@@ -51,7 +45,7 @@ async function getStats(where) {
   const serviceSamples = tickets
     .filter(t => t.completedAt && t.calledAt && t.status === 'completed')
     .map(t => (new Date(t.completedAt) - new Date(t.calledAt)) / 1000)
-    .filter(s => s > 0 && s <= MAX_SERVICE_SECS); 
+    .filter(s => s > 0 && s <= MAX_SERVICE_SECS);
 
   const avgServiceSec = serviceSamples.length > 0
     ? serviceSamples.reduce((a, b) => a + b, 0) / serviceSamples.length : 0;
@@ -71,7 +65,7 @@ async function getStats(where) {
 
   const serviceCounts = {};
   tickets.forEach(t => {
-    const key = t.purpose || 'other';
+    const key = t.purposeKey || t.purpose || 'other';
     serviceCounts[key] = (serviceCounts[key] || 0) + 1;
   });
   const topServices = Object.entries(serviceCounts)
@@ -102,21 +96,9 @@ async function getStats(where) {
       id: s.id,
       fullName: s.fullName,
       served: s.served,
-      avgServiceTime: s.samples > 0 ? formatMinutes(s.totalSec / s.samples) : '—'
+      avgServiceTimeSec: s.samples > 0 ? Math.round(s.totalSec / s.samples) : null
     }))
     .sort((a, b) => b.served - a.served);
-
-  const rawTickets = tickets.map(t => ({
-    id: t.id,
-    ticketNumber: t.ticketNumber,
-    studentName: t.studentName,
-    purpose: t.purpose,
-    status: t.status,
-    createdAt: t.createdAt,
-    calledAt: t.calledAt,
-    completedAt: t.completedAt,
-    servedByName: t.server?.fullName || null
-  }));
 
   return {
     overview: {
@@ -124,24 +106,20 @@ async function getStats(where) {
       completionRate: total > 0 ? ((completed / total) * 100).toFixed(2) : 0
     },
     timing: {
-      avgWaitTime: Math.round(avgWaitSec),
-      avgWaitTimeFormatted: formatMinutes(avgWaitSec),
-      avgServiceTime: Math.round(avgServiceSec),
-      avgServiceTimeFormatted: formatMinutes(avgServiceSec)
+      avgWaitTime:    Math.round(avgWaitSec),
+      avgServiceTime: Math.round(avgServiceSec)
     },
     hourlyDistribution,
     peakHour,
     topServices,
-    staffStats,
-    tickets: rawTickets
+    staffStats
   };
 }
 
 exports.getTodayStats = async (req, res, next) => {
   try {
     const { start, end } = getDayBoundsLocal();
-    const where = { createdAt: { [Op.between]: [start, end] } };
-    const data = await getStats(where);
+    const data = await getStats({ createdAt: { [Op.between]: [start, end] } });
     res.json({ success: true, data });
   } catch (e) { next(e); }
 };
@@ -150,12 +128,11 @@ exports.getPeriodStats = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
     if (!startDate || !endDate) {
-      return res.status(400).json({ success: false, message: 'startDate and endDate are required' });
+      return res.status(400).json({ success: false, message: 'startDate and endDate required' });
     }
     const start = new Date(`${startDate}T00:00:00.000+06:00`);
     const end   = new Date(`${endDate}T23:59:59.999+06:00`);
-    const where = { createdAt: { [Op.between]: [start, end] } };
-    const data = await getStats(where);
+    const data  = await getStats({ createdAt: { [Op.between]: [start, end] } });
     res.json({ success: true, data });
   } catch (e) { next(e); }
 };
@@ -163,12 +140,8 @@ exports.getPeriodStats = async (req, res, next) => {
 exports.exportReport = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
-    const start = startDate
-      ? new Date(`${startDate}T00:00:00.000+06:00`)
-      : getDayBoundsLocal().start;
-    const end = endDate
-      ? new Date(`${endDate}T23:59:59.999+06:00`)
-      : getDayBoundsLocal().end;
+    const start = startDate ? new Date(`${startDate}T00:00:00.000+06:00`) : getDayBoundsLocal().start;
+    const end   = endDate   ? new Date(`${endDate}T23:59:59.999+06:00`)   : getDayBoundsLocal().end;
 
     const tickets = await Ticket.findAll({
       where: { createdAt: { [Op.between]: [start, end] } },
@@ -179,14 +152,14 @@ exports.exportReport = async (req, res, next) => {
     res.json({
       success: true,
       data: tickets.map(t => ({
-        ticketNumber: t.ticketNumber,
-        studentName: t.studentName,
-        purpose: t.purpose,
-        status: t.status,
-        createdAt: t.createdAt,
-        calledAt: t.calledAt,
-        completedAt: t.completedAt,
-        servedBy: t.server?.fullName || null
+        ticketCode:   t.ticketCode || t.ticketNumber,
+        studentName:  t.studentName,
+        purposeKey:   t.purposeKey || t.purpose,
+        status:       t.status,
+        createdAt:    t.createdAt,
+        calledAt:     t.calledAt,
+        completedAt:  t.completedAt,
+        servedBy:     t.server?.fullName || null
       })),
       meta: { exportedAt: new Date().toISOString(), count: tickets.length }
     });

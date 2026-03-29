@@ -14,8 +14,9 @@
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          {{ t('analytics.export') }} (CSV)
+          {{ exportLoading ? t('common.loading') : t('analytics.export') + ' (CSV)' }}
         </button>
+          <span v-if="exportError" style="color:#f87171;font-size:13px;display:block;margin-top:6px">{{ exportError }}</span>
       </div>
 
      
@@ -86,7 +87,21 @@
           </div>
           <div>
             <div class="metric-label">{{ t('analytics.avgService') }}</div>
-            <div class="metric-value">{{ stats.timing?.avgServiceTimeFormatted || '—' }}</div>
+            <div class="metric-value">{{ formatSeconds(stats.timing?.avgServiceTime) }}</div>
+          </div>
+        </div>
+
+        <!-- Пропущенные -->
+        <div class="metric-card">
+          <div class="metric-icon gray">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <div>
+            <div class="metric-label">{{ t('analytics.skipped') }}</div>
+            <div class="metric-value">{{ stats.overview?.cancelled || 0 }}</div>
+            <div class="metric-sub gray">{{ skippedRate }}%</div>
           </div>
         </div>
       </div>
@@ -114,7 +129,7 @@
                     </div>
                   </td>
                   <td><strong>{{ s.served }}</strong></td>
-                  <td>{{ s.avgServiceTime }}</td>
+                  <td>{{ formatSeconds(s.avgServiceTimeSec) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -215,6 +230,13 @@ async function loadData() {
   }
 }
 
+const skippedRate = computed(() => {
+  const total     = stats.overview?.total     || 0
+  const cancelled = stats.overview?.cancelled || 0
+  if (!total) return 0
+  return ((cancelled / total) * 100).toFixed(1)
+})
+
 const maxCount = computed(() => stats.hourlyDistribution.length ? Math.max(...stats.hourlyDistribution.map(i => i.count)) : 1)
 const getBarHeight = (c) => Math.round((c / maxCount.value) * 100)
 
@@ -226,11 +248,46 @@ function translatePurpose(p) {
   return p || '—'
 }
 
-function exportCSV() {
-  if (!stats.tickets.length) { alert('Нет данных'); return }
-  const h = ['№', 'Услуга', 'Студент', 'Создан', 'Вызван', 'Завершён', 'Ожидание(мин)', 'Обслуживание(мин)', 'Статус', 'Сотрудник']
-  const rows = stats.tickets.map(t => [
-    t.ticketNumber, translatePurpose(t.purpose), t.studentName,
+const exportError = ref('')
+const exportLoading = ref(false)
+
+function formatSeconds(secs) {
+  if (!secs || secs <= 0) return '—'
+  if (secs < 60) return `${Math.round(secs)} ${t('analytics.sec')}`
+  const mins = Math.floor(secs / 60)
+  const s    = Math.round(secs % 60)
+  return s > 0
+    ? `${mins} ${t('analytics.min')} ${s} ${t('analytics.sec')}`
+    : `${mins} ${t('analytics.min')}`
+}
+
+async function exportCSV() {
+  exportLoading.value = true
+  try {
+    let s, e
+    const now = new Date()
+    if (selectedPeriod.value === 'today') {
+      s = e = now.toISOString().split('T')[0]
+    } else if (selectedPeriod.value === 'week') {
+      const start = new Date(); start.setDate(start.getDate() - 7)
+      s = start.toISOString().split('T')[0]; e = now.toISOString().split('T')[0]
+    } else if (selectedPeriod.value === 'month') {
+      const start = new Date(); start.setMonth(start.getMonth() - 1)
+      s = start.toISOString().split('T')[0]; e = now.toISOString().split('T')[0]
+    } else {
+      s = customDates.start; e = customDates.end
+    }
+    if (!s || !e) { exportLoading.value = false; return }
+    const exportRes = await analyticsAPI.exportReport(s, e)
+    const exportTickets = exportRes.data.data || []
+    if (!exportTickets.length) {
+      exportError.value = t('analytics.noData')
+      setTimeout(() => exportError.value = '', 3000)
+      exportLoading.value = false; return
+    }
+    const h = ['№', 'Услуга', 'Студент', 'Создан', 'Вызван', 'Завершён', 'Ожидание(мин)', 'Обслуживание(мин)', 'Статус', 'Сотрудник']
+    const rows = exportTickets.map(t => [
+      t.ticketCode || t.ticketNumber, translatePurpose(t.purposeKey || t.purpose), t.studentName,
     t.createdAt ? new Date(t.createdAt).toLocaleString('ru-RU') : '',
     t.calledAt ? new Date(t.calledAt).toLocaleString('ru-RU') : '',
     t.completedAt ? new Date(t.completedAt).toLocaleString('ru-RU') : '',
@@ -238,11 +295,17 @@ function exportCSV() {
     t.completedAt && t.calledAt ? Math.round((new Date(t.completedAt) - new Date(t.calledAt)) / 60000) : '',
     t.status, t.servedByName || ''
   ])
-  const csv = '\uFEFF' + [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  a.download = `Отчет-${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.csv`
-  a.click()
+    const csv = '\uFEFF' + [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    a.download = `Отчет-${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.csv`
+    a.click()
+  } catch (e) {
+    exportError.value = t('analytics.noData')
+    setTimeout(() => exportError.value = '', 3000)
+  } finally {
+    exportLoading.value = false
+  }
 }
 
 onMounted(() => loadData())
@@ -354,6 +417,8 @@ onMounted(() => loadData())
 .bar-val { color: white; font-size: 11px; font-weight: 600; }
 .bar-lbl { margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.35); }
 
+.metric-icon.gray { background: rgba(156,163,175,0.15); color: #9ca3af; }
+.metric-sub.gray { color: #9ca3af; }
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center; z-index: 999;

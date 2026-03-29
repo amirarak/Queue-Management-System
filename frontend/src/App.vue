@@ -1,21 +1,13 @@
 <template>
-  <div class="app">
-    <NavigationBar v-if="showNav" />
+  <div id="app">
+    <NavigationBar v-if="!$route.meta.hideNav" />
     <router-view />
   </div>
 </template>
 
+
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import NavigationBar from './components/common/NavigationBar.vue'
-
-const route = useRoute()
-
-
-const showNav = computed(() =>
-  !['Login', 'Register'].includes(route.name)
-)
+import NavigationBar from '@/components/common/NavigationBar.vue'
 </script>
 
 <style>

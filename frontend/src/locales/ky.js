@@ -42,7 +42,8 @@ export default {
     forgotTitle: 'Сырсөздү унуттуңузбу?',
     forgotText: 'Сырсөздөр электрондук почта аркылуу орнотулат. Сырсөздү калыбына келтирүү үчүн администраторго кайрылыңыз.',
     forgotContact: 'Система администраторуна кайрылыңыз',
-    forgotClose: 'Түшүндүм'
+    forgotClose: 'Түшүндүм',
+    forgotPassword: 'Сырсөздү унуттуңузбу?'
   },
 
   kiosk: {
@@ -52,7 +53,8 @@ export default {
     selectService: 'Кызматты тандаңыз',
     inQueue: 'КЕЗЕКТЕ',
     creatingTicket: 'Талон түзүлүүдө...',
-    queueError: 'Кезекти жүктөөдө ката'
+    queueError: 'Кезекти жүктөөдө ката',
+    selectDepartment: 'Факультетиңизди тандаңыз'
   },
 
   services: {
@@ -92,7 +94,10 @@ export default {
     staffRole: 'Кызматкер',
     adminRole: 'Администратор',
     createSuccess: 'Кызматкер түзүлдү! Нускама каты жөнөтүлдү.',
-    createError: 'Кызматкер түзүүдө ката'
+    createError: 'Кызматкер түзүүдө ката',
+    skip: 'Өткөрүп жибер',
+    skipTitle: 'Талонду өткөрүп жибер',
+    skipConfirmText: 'Кардар күтпөдүбү? Талон өткөрүп жиберилди деп белгиленет.'
   },
 
   staffMgmt: {
@@ -115,7 +120,12 @@ export default {
     confirmDeleteText: 'Бул кызматкерди жойгуңуз келеби',
     updateSuccess: 'Маалыматтар жаңыртылды!',
     logout: 'Чыгуу',
-    emailNote: 'Кызматкер сырсөзүн орнотуу үчүн кат алат'
+    emailNote: 'Кызматкер сырсөзүн орнотуу үчүн кат алат',
+    department:   'Факультет',
+    noDepartment: 'Факультети жок',
+    emailNote:    'Кызматкер сырсөз коюу үчүн кат алат',
+    emailLabel:   'Корпоративдик почта',
+    logoutConfirmText: 'Чындап эле тутумдан чыккыңыз келеби?'
   },
 
   analytics: {
@@ -141,44 +151,86 @@ export default {
     ticketsServed: 'Тейленди',
     avgServiceShort: 'Орт. убакыт',
     topServices: 'Популярдуу кызматтар',
-    noData: 'Бул мезгил үчүн маалымат жок'
+    noData: 'Бул мезгил үчүн маалымат жок',
+    sec: 'сек',
+    min: 'мин',
+    deptStats: 'Факультеттер боюнча статистика',
+    faculty: 'Факультет',
+    completionRate: 'Аткарылды',
+    skipped: 'Өткөрүп жиберилди'
   },
 
   profile: {
-    title: 'Профиль',
-    back: 'Артка',
-    personalData: 'Жеке маалыматтар',
-    fullName: 'Толук аты-жөнү',
-    email: 'Email',
-    emailHint: 'Emailди өзгөртүүгө болбойт',
-    saveChanges: 'Өзгөртүүлөрдү сактоо',
-    saving: 'Сакталуудa...',
-    saveSuccess: 'Маалыматтар жаңыртылды!',
-    saveError: 'Сактоодо ката',
-    changePassword: 'Сырсөздү өзгөртүү',
-    currentPassword: 'Учурдагы сырсөз',
-    newPassword: 'Жаңы сырсөз',
-    confirmPassword: 'Сырсөздү ырастаңыз',
+    title:                    'Менин профилим',
+    back:                     'Артка',
+    personalData:             'Жеке маалымат',
+    fullName:                 'Толук аты-жөнү',
+    email:                    'Корпоративдик почта',
+    emailHint:                'Emailди өзгөртүүгө болбойт',
+    saveChanges:              'Өзгөртүүлөрдү сактоо',
+    saving:                   'Сакталууда...',
+    saveSuccess:              'Маалымат ийгиликтүү жаңыртылды!',
+    saveError:                'Сактоодо ката кетти',
+    nameMinLength:            'Минимум 3 символ',
+    daysInSystem:             'күн системада',
+    changePassword:           'Сырсөздү өзгөртүү',
+    currentPassword:          'Учурдагы сырсөз',
     currentPasswordPlaceholder: 'Учурдагы сырсөздү киргизиңиз',
-    newPasswordPlaceholder: 'Кеминде 8 символ',
+    newPassword:              'Жаңы сырсөз',
+    newPasswordPlaceholder:   'Минимум 8 символ',
+    confirmPassword:          'Сырсөздү ырастаңыз',
     confirmPasswordPlaceholder: 'Жаңы сырсөздү кайталаңыз',
-    changePasswordBtn: 'Сырсөздү өзгөртүү',
-    passwordSuccess: 'Сырсөз ийгиликтүү өзгөртүлдү!',
-    passwordError: 'Сырсөздү өзгөртүүдө ката',
-    activity: 'Аккаунт активдүүлүгү',
-    lastLogin: 'Акыркы кириш',
-    status: 'Статус',
-    statusActive: 'Активдүү',
-    roleLabel: 'Ролу',
-    createdAt: 'Аккаунт түзүлгөн',
-    daysInSystem: 'Системада күн',
-    avgTime: 'Орт. убакыт',
-    minLength: 'Кеминде 8 символ',
-    passwordsNoMatch: 'Сырсөздөр дал келбейт',
-    nameMinLength: 'Кеминде 3 символ',
-    strengthWeak: 'Алсыз',
-    strengthFair: 'Орточо',
-    strengthGood: 'Жакшы',
-    strengthStrong: 'Ишенимдүү'
+    changePasswordBtn:        'Сырсөздү өзгөртүү',
+    passwordSuccess:          'Сырсөз ийгиликтүү өзгөртүлдү!',
+    passwordError:            'Сырсөздү өзгөртүүдө ката',
+    passwordsNoMatch:         'Сырсөздөр дал келбейт',
+    minLength:                'Минимум 8 символ',
+    strengthWeak:             'Алсыз',
+    strengthFair:             'Орточо',
+    strengthGood:             'Жакшы',
+    strengthStrong:           'Күчтүү',
+    activity:                 'Активдүүлүк',
+    lastLogin:                'Акыркы кириш',
+    status:                   'Статус',
+    statusActive:             'Активдүү',
+    roleLabel:                'Ролу',
+    createdAt:                'Катталган күнү',
+  },
+  departments: {
+    engineering: 'Инженерия жана информатика факультети',
+    economics:   'Экономика жана башкаруу факультети',
+    social:      'Социалдык илимдер факультети',
+    medicine:    'Медицина факультети',
+    humanities:  'Гуманитардык илимдер факультети',
+  },
+   forgotPassword: {
+    title:       'Сырсөздү унуттуңузбу?',
+    description: 'Корпоративдик почтаңызды киргизиңиз — сырсөздү баштапкы абалга келтирүү шилтемесин жөнөтөбүз.',
+    submit:      'Шилтемени жөнөтүү',
+    sentTitle:   'Кат жөнөтүлдү!',
+    sentDesc:    'Сырсөздү баштапкы абалга келтирүү шилтемеси жөнөтүлдү: ',
+    sentNote:    'Шилтеме 1 саат бою жараксыз болот. Кат келбесе «Спам» папкасын текшериңиз.',
+    backToLogin: 'Кирүүгө кайтуу',
+    linkText:    'Сырсөздү унуттуңузбу?',
+  },
+  setPassword: {
+    checking: 'Шилтемени текшерүүдө...',
+    invalidTitle: 'Шилтеме жараксыз',
+    invalidText: 'Бул шилтеме мурунтан эле колдонулган же мөөнөтү өткөн. Администраторго кайрылыңыз.',
+    title: 'Сырсөздү орнотуңуз',
+    subtitle: 'Системага кируу үчүн сырсөз ойлоп табыңыз',
+    newPassword: 'Жаңы сырсөз',
+    placeholder: 'Минимум 8 символ',
+    confirmPassword: 'Сырсөздү кайталаңыз',
+    confirmPlaceholder: 'Сырсөздү дагы бир жолу киргизиңиз',
+    req8chars: 'Минимум 8 символ',
+    reqUppercase: 'Баш тамга',
+    reqNumber: 'Цифра',
+    submit: 'Сырсөздү орнотуу',
+    successTitle: 'Сырсөз орнотулду!',
+    successText: 'Эми системага кире аласыз.',
+    goToLogin: 'Кирүүгө өтүү',
   }
+
+
 }

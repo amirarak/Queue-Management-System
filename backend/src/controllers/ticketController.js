@@ -1,44 +1,59 @@
-const { Ticket, User } = require('../models');
+const { Ticket, User, Department } = require('../models');
 const { redisHelper } = require('../config/redis');
 const logger = require('../utils/logger');
 const { broadcastEvent } = require('../services/websocketService');
 const { Op } = require('sequelize');
 const { getPaginationParams, paginatedResponse, getDayBounds } = require('../utils/helpers');
 
-
 exports.createTicket = async (req, res, next) => {
   try {
-    const { studentName, purpose, serviceTypeId } = req.body;
+    const { studentName, purposeKey, purpose, serviceTypeId, departmentId } = req.body;
+
+    const finalPurposeKey = purposeKey || purpose;
+
+    if (!finalPurposeKey) {
+      return res.status(400).json({ success: false, message: 'purposeKey is required' });
+    }
+    if (!departmentId) {
+      return res.status(400).json({ success: false, message: 'departmentId is required' });
+    }
+
+    const department = await Department.findByPk(departmentId);
+    if (!department) {
+      return res.status(404).json({ success: false, message: 'Department not found' });
+    }
 
     const { start, end } = getDayBounds();
 
     const lastTicket = await Ticket.findOne({
-      where: { createdAt: { [Op.between]: [start, end] } },
+      where: { departmentId, createdAt: { [Op.between]: [start, end] } },
       order: [['ticketNumber', 'DESC']]
     });
 
     const ticketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
+    const ticketCode   = `${department.code}-${ticketNumber}`;
 
     const ticket = await Ticket.create({
       ticketNumber,
+      ticketCode,
       studentName: studentName || 'Студент',
-      purpose,
+      purposeKey:  finalPurposeKey,
+      purpose:     finalPurposeKey,
+      departmentId,
       serviceTypeId: serviceTypeId || null,
       status: 'waiting'
     });
 
-    broadcastEvent('ticket:created', { ticket });
-
-    logger.info(`Ticket created: #${ticketNumber}`);
-
-    res.status(201).json({
-      success: true,
-      message: 'Ticket created successfully',
-      data: ticket
+    await ticket.reload({
+      include: [{ model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }]
     });
+
+    broadcastEvent('ticket:created', { ticket, departmentId });
+    logger.info(`Ticket created: ${ticketCode}`);
+
+    res.status(201).json({ success: true, message: 'Ticket created successfully', data: ticket });
   } catch (error) { next(error); }
 };
-
 
 exports.getTickets = async (req, res, next) => {
   try {
@@ -48,17 +63,21 @@ exports.getTickets = async (req, res, next) => {
     const where = {};
     if (status) where.status = status;
 
-    if (date) {
-      const { start, end } = getDayBounds(new Date(date));
-      where.createdAt = { [Op.between]: [start, end] };
-    } else {
-      const { start, end } = getDayBounds();
-      where.createdAt = { [Op.between]: [start, end] };
+    const user = await User.findByPk(req.user.id);
+    if (user?.departmentId && req.user.role !== 'admin') {
+      where.departmentId = user.departmentId;
     }
+
+    const targetDate = date ? new Date(date) : new Date();
+    const { start, end } = getDayBounds(targetDate);
+    where.createdAt = { [Op.between]: [start, end] };
 
     const { count, rows } = await Ticket.findAndCountAll({
       where,
-      include: [{ model: User, as: 'server', attributes: ['id', 'fullName'], required: false }],
+      include: [
+        { model: User,       as: 'server',     attributes: ['id','fullName'], required: false },
+        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }
+      ],
       order: [['createdAt', 'DESC']],
       limit: limitNum,
       offset
@@ -68,36 +87,28 @@ exports.getTickets = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-
 exports.getTicketById = async (req, res, next) => {
   try {
     const ticket = await Ticket.findByPk(req.params.id, {
-      include: [{ model: User, as: 'server', attributes: ['id', 'fullName'], required: false }]
+      include: [
+        { model: User,       as: 'server',     attributes: ['id','fullName'], required: false },
+        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn'], required: false }
+      ]
     });
-
-    if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Ticket not found' });
-    }
-
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
     res.json({ success: true, data: ticket });
   } catch (error) { next(error); }
 };
 
-
 exports.cancelTicket = async (req, res, next) => {
   try {
     const ticket = await Ticket.findByPk(req.params.id);
-
-    if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Ticket not found' });
-    }
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
     if (ticket.status !== 'waiting') {
       return res.status(400).json({ success: false, message: 'Only waiting tickets can be cancelled' });
     }
-
     await ticket.update({ status: 'cancelled' });
-    broadcastEvent('ticket:cancelled', { ticketId: req.params.id });
-
-    res.json({ success: true, message: 'Ticket cancelled successfully', data: ticket });
+    broadcastEvent('ticket:cancelled', { ticketId: req.params.id, departmentId: ticket.departmentId });
+    res.json({ success: true, message: 'Ticket cancelled', data: ticket });
   } catch (error) { next(error); }
 };

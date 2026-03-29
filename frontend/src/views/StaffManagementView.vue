@@ -82,7 +82,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label>{{ t('staffMgmt.fullName') }}</label>
-            <input v-model="form.fullName" type="text" class="form-input" placeholder="Иванов Иван Иванович" />
+            <input v-model="form.fullName" type="text" class="form-input" placeholder="" />
             <span v-if="formErrors.fullName" class="err">{{ formErrors.fullName }}</span>
           </div>
           <div class="form-group">
@@ -90,7 +90,6 @@
             <input v-model="form.username" type="email" class="form-input"
               placeholder="username@alatoo.edu.kg" :disabled="!!editingStaff" />
             <span v-if="formErrors.username" class="err">{{ formErrors.username }}</span>
-            <!-- Подсказка только при создании -->
             <span v-if="!editingStaff" class="field-note">{{ t('staffMgmt.emailNote') }}</span>
           </div>
           <div class="form-group">

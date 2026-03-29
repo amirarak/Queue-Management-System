@@ -12,12 +12,7 @@ exports.validate = (schema) => {
         field: detail.path.join('.'),
         message: detail.message
       }));
-
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors
-      });
+      return res.status(400).json({ success: false, message: 'Validation error', errors });
     }
 
     req.body = value;
@@ -30,19 +25,15 @@ exports.registerSchema = Joi.object({
     .email()
     .pattern(/@alatoo\.edu\.kg$/)
     .required()
-    .messages({
-      'string.pattern.base': 'Only @alatoo.edu.kg emails are allowed'
-    }),
-
+    .messages({ 'string.pattern.base': 'Only @alatoo.edu.kg emails are allowed' }),
   password: Joi.string()
     .min(8)
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .required()
-    .messages({
-      'string.pattern.base': 'Password must contain uppercase, lowercase, and a number'
-    }),
-
-  fullName: Joi.string().min(2).max(255).required()
+    .messages({ 'string.pattern.base': 'Password must contain uppercase, lowercase, and a number' }),
+  fullName:     Joi.string().min(2).max(255).required(),
+  role:         Joi.string().valid('staff', 'admin').optional(),
+  departmentId: Joi.number().integer().positive().allow(null).optional()
 });
 
 exports.loginSchema = Joi.object({
@@ -51,10 +42,12 @@ exports.loginSchema = Joi.object({
 });
 
 exports.createTicketSchema = Joi.object({
-  studentName: Joi.string().max(255).optional(),
-  purpose: Joi.string().min(3).max(255).required(),
-  serviceTypeId: Joi.number().integer().positive().optional()
-});
+  studentName:   Joi.string().max(255).optional(),
+  purposeKey:    Joi.string().min(3).max(100).optional(), 
+  purpose:       Joi.string().min(3).max(255).optional(), 
+  departmentId:  Joi.number().integer().positive().required(),
+  serviceTypeId: Joi.number().integer().positive().allow(null).optional()
+}).or('purposeKey', 'purpose') 
 
 exports.changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
@@ -62,7 +55,5 @@ exports.changePasswordSchema = Joi.object({
     .min(8)
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .required()
-    .messages({
-      'string.pattern.base': 'Password must contain uppercase, lowercase, and a number'
-    })
+    .messages({ 'string.pattern.base': 'Password must contain uppercase, lowercase, and a number' })
 });

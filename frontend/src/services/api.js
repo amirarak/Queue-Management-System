@@ -28,7 +28,7 @@ api.interceptors.response.use(
   }
 )
 
-// ========== AUTH ==========
+// AUTH 
 export const authAPI = {
   login(username, password) {
     return api.post('/auth/login', { username, password })
@@ -45,13 +45,12 @@ export const authAPI = {
   changePassword(currentPassword, newPassword) {
     return api.put('/auth/change-password', { currentPassword, newPassword })
   },
-  // Установка пароля по токену из письма-приглашения
   setPassword(token, password) {
     return api.post('/auth/set-password', { token, password })
   }
 }
 
-// ========== TICKETS ==========
+// TICKETS 
 export const ticketsAPI = {
   create(ticketData) {
     return api.post('/tickets', ticketData)
@@ -67,7 +66,7 @@ export const ticketsAPI = {
   }
 }
 
-// ========== QUEUE ==========
+// QUEUE 
 export const queueAPI = {
   getQueue(departmentId) {
     return api.get('/queue', { params: { departmentId } })
@@ -83,10 +82,13 @@ export const queueAPI = {
   },
   getHistory(params) {
     return api.get('/queue/history', { params })
+  },
+  skip(id) {
+    return api.put(`/queue/${id}/skip`)
   }
 }
 
-// ========== ANALYTICS ==========
+//  ANALYTICS
 export const analyticsAPI = {
   getToday(departmentId) {
     return api.get('/analytics/today', { params: { departmentId } })
@@ -96,10 +98,14 @@ export const analyticsAPI = {
   },
   export(params) {
     return api.get('/analytics/export', { params })
+  },
+  // alias used in AnalyticsView
+  exportReport(startDate, endDate) {
+    return api.get('/analytics/export', { params: { startDate, endDate } })
   }
 }
 
-// ========== ADMIN ==========
+// ADMIN 
 export const adminAPI = {
   getStaff() {
     return api.get('/users')

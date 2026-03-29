@@ -6,7 +6,8 @@ export default {
     display: 'Электронное табло',
     staff: 'Панель сотрудника',
     analytics: 'Аналитика',
-    staffMgmt: 'Управление'
+    staffMgmt: 'Управление',
+    profile: 'Мой профиль'
   },
 
   common: {
@@ -16,20 +17,22 @@ export default {
     cancel: 'Отмена',
     close: 'Закрыть',
     logout: 'Выйти',
-    back: 'Назад',
-    yes: 'Да, выйти',
-    no: 'Отмена'
+    back: 'Назад'
   },
 
-  logout: {
-    confirmTitle: 'Выход из системы',
-    confirmText: 'Вы действительно хотите выйти?'
+  departments: {
+    engineering: 'Факультет инженерии и информатики',
+    economics:   'Факультет экономики и управления',
+    social:      'Факультет социальных наук',
+    medicine:    'Медицинский факультет',
+    humanities:  'Факультет гуманитарных наук',
   },
 
   login: {
     title: 'Вход в систему',
     subtitle: 'Ala-Too International University',
-    email: 'Email',
+    email: 'Корпоративная почта',
+    emailPlaceholder: 'user@alatoo.edu.kg',
     password: 'Пароль',
     passwordPlaceholder: 'Введите пароль',
     submit: 'Войти',
@@ -38,11 +41,7 @@ export default {
     emailRequired: 'Email обязателен',
     emailInvalid: 'Только почта alatoo.edu.kg',
     passwordRequired: 'Пароль обязателен',
-    forgotPassword: 'Забыли пароль?',
-    forgotTitle: 'Забыли пароль?',
-    forgotText: 'Пароли устанавливаются через приглашение по электронной почте. Для сброса пароля свяжитесь с администратором.',
-    forgotContact: 'Обратитесь к администратору системы',
-    forgotClose: 'Понятно'
+    forgotPassword: 'Забыли пароль?'
   },
 
   kiosk: {
@@ -50,6 +49,7 @@ export default {
     instruction: 'Нажмите на экран, чтобы получить номер очереди',
     start: 'НАЧАТЬ',
     selectService: 'Выберите услугу',
+    selectDepartment: 'Выберите факультет',
     inQueue: 'В ОЧЕРЕДИ',
     creatingTicket: 'Создаём талон...',
     queueError: 'Ошибка загрузки очереди'
@@ -91,8 +91,11 @@ export default {
     noClient: 'Нет активного клиента',
     staffRole: 'Сотрудник',
     adminRole: 'Администратор',
-    createSuccess: 'Сотрудник создан! Письмо с инструкцией отправлено.',
-    createError: 'Ошибка создания сотрудника'
+    createSuccess: 'Сотрудник успешно создан!',
+    createError: 'Ошибка создания сотрудника',
+    skip: 'Пропустить',
+    skipTitle: 'Пропустить талон',
+    skipConfirmText: 'Клиент не дождался? Талон будет отмечен как пропущенный.'
   },
 
   staffMgmt: {
@@ -100,7 +103,6 @@ export default {
     addStaff: 'Добавить сотрудника',
     editStaff: 'Редактировать сотрудника',
     fullName: 'ФИО',
-    emailLabel: 'Email',
     role: 'Роль',
     status: 'Статус',
     lastLogin: 'Последний вход',
@@ -114,8 +116,12 @@ export default {
     confirmDelete: 'Подтвердите удаление',
     confirmDeleteText: 'Вы уверены, что хотите удалить сотрудника',
     updateSuccess: 'Данные обновлены!',
-    logout: 'Выйти',
-    emailNote: 'Сотрудник получит письмо для установки пароля'
+    logout: 'Выйти из системы',
+    department:   'Факультет',
+    noDepartment: 'Без факультета',
+    emailNote:    'Сотрудник получит письмо для установки пароля',
+    emailLabel:   'Корпоративная почта',
+    logoutConfirmText: 'Вы действительно хотите выйти из системы?'
   },
 
   analytics: {
@@ -141,44 +147,78 @@ export default {
     ticketsServed: 'Обслужено',
     avgServiceShort: 'Ср. время',
     topServices: 'Популярные услуги',
-    noData: 'Нет данных за этот период'
+    noData: 'Нет данных за этот период',
+    sec: 'сек',
+    min: 'мин',
+    deptStats: 'Статистика по факультетам',
+    faculty: 'Факультет',
+    completionRate: 'Выполнено',
+    skipped: 'Пропущено'
+  },
+
+  forgotPassword: {
+    title: 'Забыли пароль?',
+    description: 'Введите корпоративную почту — мы отправим ссылку для сброса пароля.',
+    submit: 'Отправить ссылку',
+    sentTitle: 'Письмо отправлено!',
+    sentDesc: 'Ссылка для сброса пароля отправлена на ',
+    sentNote: 'Ссылка действительна 1 час. Проверьте папку «Спам» если письмо не пришло.',
+    backToLogin: 'Вернуться ко входу'
   },
 
   profile: {
-    title: 'Профиль',
-    back: 'Назад',
-    personalData: 'Личные данные',
-    fullName: 'Полное имя',
-    email: 'Email',
-    emailHint: 'Email изменить нельзя',
-    saveChanges: 'Сохранить изменения',
-    saving: 'Сохранение...',
-    saveSuccess: 'Данные успешно обновлены!',
-    saveError: 'Ошибка сохранения',
-    changePassword: 'Смена пароля',
-    currentPassword: 'Текущий пароль',
-    newPassword: 'Новый пароль',
-    confirmPassword: 'Подтвердите пароль',
+    title:                    'Мой профиль',
+    back:                     'Назад',
+    personalData:             'Личные данные',
+    fullName:                 'ФИО',
+    email:                    'Корпоративная почта',
+    emailHint:                'Email нельзя изменить',
+    saveChanges:              'Сохранить изменения',
+    saving:                   'Сохранение...',
+    saveSuccess:              'Данные успешно обновлены!',
+    saveError:                'Ошибка сохранения',
+    nameMinLength:            'Минимум 3 символа',
+    daysInSystem:             'дней в системе',
+    changePassword:           'Смена пароля',
+    currentPassword:          'Текущий пароль',
     currentPasswordPlaceholder: 'Введите текущий пароль',
-    newPasswordPlaceholder: 'Минимум 8 символов',
+    newPassword:              'Новый пароль',
+    newPasswordPlaceholder:   'Минимум 8 символов',
+    confirmPassword:          'Подтвердите пароль',
     confirmPasswordPlaceholder: 'Повторите новый пароль',
-    changePasswordBtn: 'Изменить пароль',
-    passwordSuccess: 'Пароль успешно изменён!',
-    passwordError: 'Ошибка смены пароля',
-    activity: 'Активность аккаунта',
-    lastLogin: 'Последний вход',
-    status: 'Статус',
-    statusActive: 'Активен',
-    roleLabel: 'Роль',
-    createdAt: 'Аккаунт создан',
-    daysInSystem: 'Дней в системе',
-    avgTime: 'Ср. время',
-    minLength: 'Минимум 8 символов',
-    passwordsNoMatch: 'Пароли не совпадают',
-    nameMinLength: 'Минимум 3 символа',
-    strengthWeak: 'Слабый',
-    strengthFair: 'Средний',
-    strengthGood: 'Хороший',
-    strengthStrong: 'Надёжный'
-  }
+    changePasswordBtn:        'Изменить пароль',
+    passwordSuccess:          'Пароль успешно изменён!',
+    passwordError:            'Ошибка смены пароля',
+    passwordsNoMatch:         'Пароли не совпадают',
+    minLength:                'Минимум 8 символов',
+    strengthWeak:             'Слабый',
+    strengthFair:             'Средний',
+    strengthGood:             'Хороший',
+    strengthStrong:           'Надёжный',
+    activity:                 'Активность',
+    lastLogin:                'Последний вход',
+    status:                   'Статус',
+    statusActive:             'Активен',
+    roleLabel:                'Роль',
+    createdAt:                'Дата регистрации',
+  },
+  setPassword: {
+  checking: 'Проверяем ссылку...',
+  invalidTitle: 'Ссылка недействительна',
+  invalidText: 'Эта ссылка уже использована или устарела. Обратитесь к администратору.',
+  title: 'Установите пароль',
+  subtitle: 'Придумайте пароль для входа в систему',
+  newPassword: 'Новый пароль',
+  placeholder: 'Минимум 8 символов',
+  confirmPassword: 'Повторите пароль',
+  confirmPlaceholder: 'Введите пароль ещё раз',
+  req8chars: 'Минимум 8 символов',
+  reqUppercase: 'Заглавная буква',
+  reqNumber: 'Цифра',
+  submit: 'Установить пароль',
+  successTitle: 'Пароль установлен!',
+  successText: 'Теперь вы можете войти в систему.',
+  goToLogin: 'Перейти ко входу',
+}
+
 }

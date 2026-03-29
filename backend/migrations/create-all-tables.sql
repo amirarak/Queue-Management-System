@@ -121,14 +121,6 @@ INSERT INTO service_types (title, avg_service_time, is_active) VALUES
 ('Консультация', 300, TRUE),
 ('Прочие вопросы', 400, TRUE);
 
-INSERT INTO users (username, password, full_name, role, is_active, is_verified) VALUES
-('admin@alatoo.edu.kg', 
- '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIr6O7fW6e', 
- 'System Administrator', 
- 'admin', 
- TRUE, 
- TRUE);
-
 SELECT 
   'Tables created successfully!' AS message,
   COUNT(*) AS table_count
@@ -146,3 +138,46 @@ FROM information_schema.tables t
 WHERE table_schema = 'public' 
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
+
+
+CREATE TABLE IF NOT EXISTS departments (
+  id         SERIAL PRIMARY KEY,
+  code       VARCHAR(10)  NOT NULL UNIQUE,
+  name_ru    VARCHAR(255) NOT NULL,
+  name_en    VARCHAR(255) NOT NULL,
+  name_ky    VARCHAR(255) NOT NULL,
+  is_active  BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO departments (code, name_ru, name_en, name_ky) VALUES
+  ('ENG', 'Факультет инженерии и информатики',  'Faculty of Engineering and Informatics', 'Инженерия жана информатика факультети'),
+  ('ECO', 'Факультет экономики и управления',    'Faculty of Economics and Management',    'Экономика жана башкаруу факультети'),
+  ('SOC', 'Факультет социальных наук',           'Faculty of Social Sciences',             'Социалдык илимдер факультети'),
+  ('MED', 'Медицинский факультет',               'Faculty of Medicine',                    'Медицина факультети'),
+  ('HUM', 'Факультет гуманитарных наук',         'Faculty of Humanities',                  'Гуманитардык илимдер факультети')
+ON CONFLICT (code) DO NOTHING;
+
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_users_department ON users(department_id);
+
+
+ALTER TABLE tickets
+  ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS purpose_key   VARCHAR(100),
+  ADD COLUMN IF NOT EXISTS ticket_code   VARCHAR(20);
+
+CREATE INDEX IF NOT EXISTS idx_tickets_department ON tickets(department_id);
+
+
+DROP TRIGGER IF EXISTS update_departments_updated_at ON departments;
+
+CREATE TRIGGER update_departments_updated_at
+  BEFORE UPDATE ON departments FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+SELECT 'Migration completed!' AS message;

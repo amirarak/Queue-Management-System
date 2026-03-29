@@ -4,6 +4,7 @@ import router from './router'
 import App from './App.vue'
 import i18n from './i18n'
 import './assets/styles/global.css'
+import './assets/styles/adaptive.css'   
 
 const app = createApp(App)
 const pinia = createPinia()

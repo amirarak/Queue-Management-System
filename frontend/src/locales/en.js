@@ -6,7 +6,8 @@ export default {
     display: 'Display Board',
     staff: 'Staff Dashboard',
     analytics: 'Analytics',
-    staffMgmt: 'Management'
+    staffMgmt: 'Management',
+    profile: 'My Profile'
   },
 
   common: {
@@ -16,20 +17,22 @@ export default {
     cancel: 'Cancel',
     close: 'Close',
     logout: 'Logout',
-    back: 'Back',
-    yes: 'Yes, logout',
-    no: 'Cancel'
+    back: 'Back'
   },
 
-  logout: {
-    confirmTitle: 'Sign Out',
-    confirmText: 'Are you sure you want to sign out?'
+  departments: {
+    engineering: 'Faculty of Engineering and Informatics',
+    economics:   'Faculty of Economics and Management',
+    social:      'Faculty of Social Sciences',
+    medicine:    'Faculty of Medicine',
+    humanities:  'Faculty of Humanities',
   },
 
   login: {
     title: 'Sign In',
     subtitle: 'Ala-Too International University',
-    email: 'Email',
+    email: 'Corporate Email',
+    emailPlaceholder: 'user@alatoo.edu.kg',
     password: 'Password',
     passwordPlaceholder: 'Enter your password',
     submit: 'Sign In',
@@ -38,11 +41,7 @@ export default {
     emailRequired: 'Email is required',
     emailInvalid: 'Use alatoo.edu.kg email only',
     passwordRequired: 'Password is required',
-    forgotPassword: 'Forgot password?',
-    forgotTitle: 'Forgot your password?',
-    forgotText: 'Passwords are set via email invitation. To reset your password, please contact the system administrator.',
-    forgotContact: 'Contact the system administrator',
-    forgotClose: 'Got it'
+    forgotPassword: 'Forgot password?'
   },
 
   kiosk: {
@@ -50,6 +49,7 @@ export default {
     instruction: 'Tap the screen to get your queue number',
     start: 'START',
     selectService: 'Select a service',
+    selectDepartment: 'Select your faculty',
     inQueue: 'IN QUEUE',
     creatingTicket: 'Creating ticket...',
     queueError: 'Failed to load queue'
@@ -91,8 +91,11 @@ export default {
     noClient: 'No active client',
     staffRole: 'Staff',
     adminRole: 'Administrator',
-    createSuccess: 'Staff created! Invite email sent.',
-    createError: 'Failed to create staff member'
+    createSuccess: 'Staff member created successfully!',
+    createError: 'Failed to create staff member',
+    skip: 'Skip',
+    skipTitle: 'Skip Ticket',
+    skipConfirmText: 'Client did not show up? The ticket will be marked as skipped.'
   },
 
   staffMgmt: {
@@ -100,7 +103,6 @@ export default {
     addStaff: 'Add Staff Member',
     editStaff: 'Edit Staff Member',
     fullName: 'Full Name',
-    emailLabel: 'Email',
     role: 'Role',
     status: 'Status',
     lastLogin: 'Last Login',
@@ -114,8 +116,12 @@ export default {
     confirmDelete: 'Confirm Deletion',
     confirmDeleteText: 'Are you sure you want to delete',
     updateSuccess: 'Updated successfully!',
-    logout: 'Logout',
-    emailNote: 'Staff will receive an email to set their password'
+    logout: 'Sign Out',
+    department:   'Faculty',
+    noDepartment: 'No Faculty',
+    emailNote:    'Staff member will receive an email to set their password',
+    emailLabel:   'Corporate Email',
+    logoutConfirmText: 'Are you sure you want to sign out?'
   },
 
   analytics: {
@@ -141,44 +147,71 @@ export default {
     ticketsServed: 'Served',
     avgServiceShort: 'Avg time',
     topServices: 'Popular Services',
-    noData: 'No data for this period'
+    noData: 'No data for this period',
+    sec: 'sec', min: 'min',
+    deptStats: 'Statistics by Faculty',
+    faculty: 'Faculty', 
+    completionRate: 'Completion',
+    skipped: 'Skipped'
+  },
+
+  forgotPassword: {
+    title: 'Forgot Password?',
+    description: 'Enter your corporate email — we will send a password reset link.',
+    submit: 'Send Reset Link',
+    sentTitle: 'Email Sent!',
+    sentDesc: 'A password reset link has been sent to ',
+    sentNote: 'The link is valid for 1 hour. Check your Spam folder if you did not receive it.',
+    backToLogin: 'Back to Login'
   },
 
   profile: {
-    title: 'Profile',
-    back: 'Back',
-    personalData: 'Personal Information',
-    fullName: 'Full Name',
-    email: 'Email',
-    emailHint: 'Email cannot be changed',
-    saveChanges: 'Save Changes',
-    saving: 'Saving...',
-    saveSuccess: 'Successfully updated!',
-    saveError: 'Failed to save',
-    changePassword: 'Change Password',
-    currentPassword: 'Current Password',
-    newPassword: 'New Password',
-    confirmPassword: 'Confirm Password',
+    title:                    'My Profile',
+    back:                     'Back',
+    personalData:             'Personal Information',
+    fullName:                 'Full Name',
+    email:                    'Corporate Email',
+    emailHint:                'Email cannot be changed',
+    saveChanges:              'Save Changes',
+    saving:                   'Saving...',
+    saveSuccess:              'Information updated successfully!',
+    saveError:                'Failed to save',
+    nameMinLength:            'Minimum 3 characters',
+    daysInSystem:             'days in system',
+    changePassword:           'Change Password',
+    currentPassword:          'Current Password',
     currentPasswordPlaceholder: 'Enter current password',
-    newPasswordPlaceholder: 'At least 8 characters',
+    newPassword:              'New Password',
+    newPasswordPlaceholder:   'At least 8 characters',
+    confirmPassword:          'Confirm Password',
     confirmPasswordPlaceholder: 'Repeat new password',
-    changePasswordBtn: 'Change Password',
-    passwordSuccess: 'Password changed successfully!',
-    passwordError: 'Failed to change password',
-    activity: 'Account Activity',
-    lastLogin: 'Last Login',
-    status: 'Status',
-    statusActive: 'Active',
-    roleLabel: 'Role',
-    createdAt: 'Account Created',
-    daysInSystem: 'Days in system',
-    avgTime: 'Avg time',
-    minLength: 'Minimum 8 characters',
-    passwordsNoMatch: 'Passwords do not match',
-    nameMinLength: 'Minimum 3 characters',
-    strengthWeak: 'Weak',
-    strengthFair: 'Fair',
-    strengthGood: 'Good',
-    strengthStrong: 'Strong'
+    changePasswordBtn:        'Update Password',
+    passwordSuccess:          'Password changed successfully!',
+    passwordError:            'Failed to change password',
+    passwordsNoMatch:         'Passwords do not match',
+    minLength:                'Minimum 8 characters',
+    strengthWeak:             'Weak',
+    strengthFair:             'Fair',
+    strengthGood:             'Good',
+    strengthStrong:           'Strong',
+    activity:                 'Activity',
+    lastLogin:                'Last Login',
+    status:                   'Status',
+    statusActive:             'Active',
+    roleLabel:                'Role',
+    createdAt:                'Member Since',
+  },
+  setPassword: {
+    checking: 'Checking link...',
+    invalidTitle: 'Link is invalid',
+    invalidText: 'This link has already been used or expired. Contact your administrator.',
+    title: 'Set Your Password',
+    subtitle: 'Create a password to access the system',
+    newPassword: 'New Password', placeholder: 'At least 8 characters',
+    confirmPassword: 'Confirm Password', confirmPlaceholder: 'Repeat your password',
+    req8chars: 'At least 8 characters', reqUppercase: 'Uppercase letter', reqNumber: 'Number',
+    submit: 'Set Password',
+    successTitle: 'Password Set!', successText: 'You can now log in.',
+    goToLogin: 'Go to Login',
   }
 }

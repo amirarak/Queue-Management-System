@@ -11,10 +11,9 @@ function generateToken(length = 32) {
   return result;
 }
 
-
 exports.register = async (req, res, next) => {
   try {
-    const { username, password, fullName, role } = req.body;
+    const { username, password, fullName, role, departmentId } = req.body;
 
     const existing = await User.findOne({ where: { username } });
     if (existing) {
@@ -25,15 +24,15 @@ exports.register = async (req, res, next) => {
 
     const user = await User.create({
       username,
-      password: password || generateToken(16), 
+      password: password || generateToken(16),
       fullName,
       role: role || 'staff',
-      isVerified: false,      
+      departmentId: departmentId || null,
+      isVerified: false,
       isActive: true,
       verificationToken: inviteToken
     });
 
-    // Отправляем письмо-приглашение
     try {
       await emailService.sendInviteEmail(username, fullName, inviteToken);
       logger.info(`Invite email sent to ${username}`);
@@ -41,66 +40,49 @@ exports.register = async (req, res, next) => {
       logger.error('Failed to send invite email:', emailErr);
     }
 
-    logger.info(`New user created by admin: ${username}`);
+    logger.info(`New user created: ${username}`);
 
     res.status(201).json({
       success: true,
-      message: `Сотрудник создан. Письмо с инструкцией отправлено на ${username}`,
-      data: { id: user.id, username: user.username, fullName: user.fullName, role: user.role }
+      message: `Сотрудник создан. Письмо отправлено на ${username}`,
+      data: { id: user.id, username: user.username, fullName: user.fullName, role: user.role, departmentId: user.departmentId }
     });
   } catch (error) { next(error); }
 };
 
-
 exports.setPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
-
     if (!token || !password) {
       return res.status(400).json({ success: false, message: 'Токен и пароль обязательны' });
     }
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: 'Пароль должен быть минимум 8 символов' });
     }
-
     const user = await User.findOne({ where: { verificationToken: token } });
     if (!user) {
       return res.status(400).json({ success: false, message: 'Ссылка недействительна или уже использована' });
     }
-
-    await user.update({
-      password,           
-      isVerified: true,
-      verificationToken: null
-    });
-
-    logger.info(`Password set for user: ${user.username}`);
-
+    await user.update({ password, isVerified: true, verificationToken: null });
+    logger.info(`Password set for: ${user.username}`);
     res.json({ success: true, message: 'Пароль успешно установлен. Теперь вы можете войти.' });
   } catch (error) { next(error); }
 };
 
-
 exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-
     const user = await User.findOne({ where: { username } });
     if (!user) return res.status(401).json({ success: false, message: 'Неверный email или пароль' });
 
     const valid = await user.comparePassword(password);
     if (!valid) return res.status(401).json({ success: false, message: 'Неверный email или пароль' });
 
-    if (!user.isActive) {
-      return res.status(403).json({ success: false, message: 'Аккаунт деактивирован. Обратитесь к администратору.' });
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({ success: false, message: 'Сначала установите пароль по ссылке из письма.' });
-    }
+    if (!user.isActive) return res.status(403).json({ success: false, message: 'Аккаунт деактивирован.' });
+    if (!user.isVerified) return res.status(403).json({ success: false, message: 'Сначала установите пароль по ссылке из письма.' });
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.id, username: user.username, role: user.role, departmentId: user.departmentId },
       config.jwt.secret,
       { expiresIn: config.jwt.expire }
     );
@@ -112,7 +94,7 @@ exports.login = async (req, res, next) => {
       success: true,
       data: {
         token,
-        user: { id: user.id, username: user.username, fullName: user.fullName, role: user.role }
+        user: { id: user.id, username: user.username, fullName: user.fullName, role: user.role, departmentId: user.departmentId }
       }
     });
   } catch (error) { next(error); }
@@ -145,5 +127,31 @@ exports.changePassword = async (req, res, next) => {
     if (!valid) return res.status(400).json({ success: false, message: 'Текущий пароль неверен' });
     await user.update({ password: newPassword });
     res.json({ success: true, message: 'Пароль изменён' });
+  } catch (error) { next(error); }
+};
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'Email обязателен' });
+    }
+
+    const user = await User.findOne({ where: { username } });
+
+    if (user && user.isActive) {
+      const resetToken = generateToken(32);
+      await user.update({ verificationToken: resetToken });
+      try {
+        await emailService.sendPasswordResetEmail(user.username, user.fullName, resetToken);
+        logger.info(`Password reset email sent to: ${username}`);
+      } catch (emailErr) {
+        logger.error('Failed to send reset email:', emailErr);
+      }
+    }
+    res.json({
+      success: true,
+      message: `Если аккаунт существует, письмо отправлено на ${username}`
+    });
   } catch (error) { next(error); }
 };

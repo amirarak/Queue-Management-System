@@ -14,7 +14,6 @@
               <span class="user-role">{{ authStore.user?.role === 'admin' ? t('staff.adminRole') : t('staff.staffRole') }}</span>
             </div>
           </router-link>
-          <button class="logout-btn" @click="showLogoutConfirm = true">{{ t('common.logout') }}</button>
         </div>
       </div>
 
@@ -24,7 +23,11 @@
 
       <div class="dashboard-content">
         <div class="control-section">
-          <CurrentClientCard :ticket="queueStore.currentTicket" @complete="queueStore.completeTicket" />
+          <CurrentClientCard
+            :ticket="queueStore.currentTicket"
+            @complete="queueStore.completeTicket"
+            @skip="handleSkip"
+          />
           <button class="call-button" :disabled="!canCallNext || queueStore.loading" @click="handleCallNext">
             {{ queueStore.loading ? t('common.loading') : t('staff.callNext') }}
           </button>
@@ -33,22 +36,6 @@
       </div>
     </div>
 
-    <!-- Подтверждение выхода -->
-    <div v-if="showLogoutConfirm" class="modal-overlay" @click.self="showLogoutConfirm = false">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>{{ t('logout.confirmTitle') }}</h2>
-          <button class="modal-close" @click="showLogoutConfirm = false">✕</button>
-        </div>
-        <div class="modal-body">
-          <p class="confirm-text">{{ t('logout.confirmText') }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showLogoutConfirm = false">{{ t('common.no') }}</button>
-          <button class="btn-logout" @click="handleLogout">{{ t('common.yes') }}</button>
-        </div>
-      </div>
-    </div>
 
   </div>
 </template>
@@ -66,17 +53,13 @@ import { useRouter } from 'vue-router'
 const { t } = useI18n()
 const router = useRouter()
 const queueStore = useQueueStore()
-const authStore = useAuthStore()
-const showLogoutConfirm = ref(false)
+const authStore  = useAuthStore()
 
 const canCallNext = computed(() => queueStore.waitingTickets.length > 0 && !queueStore.currentTicket)
 
-async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
-}
-
 async function handleCallNext() { await queueStore.callNextTicket() }
+
+async function handleSkip() { await queueStore.skipTicket() }
 
 let interval = null
 onMounted(() => {
@@ -93,7 +76,7 @@ onUnmounted(() => { if (interval) clearInterval(interval) })
 .dashboard-title { font-size: 36px; font-weight: 700; margin: 0 0 8px; }
 .dashboard-subtitle { font-size: 18px; color: rgba(255,255,255,0.7); margin: 0; }
 .header-right { display: flex; align-items: center; gap: 16px; }
-.user-info { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; padding: 8px 12px; border-radius: 12px; transition: background 0.2s; }
+.user-info { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; padding: 8px 12px; border-radius: 12px; transition: background 0.2s; cursor: pointer; }
 .user-info:hover { background: rgba(255,255,255,0.08); }
 .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--color-accent); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
 .user-text { display: flex; flex-direction: column; gap: 2px; }
@@ -107,8 +90,6 @@ onUnmounted(() => { if (interval) clearInterval(interval) })
 .call-button { width: 100%; padding: 40px 20px; font-size: 24px; font-weight: 700; color: white; background: var(--color-accent); border: none; border-radius: var(--border-radius-lg); cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 30px rgba(220,38,38,0.3); }
 .call-button:hover:not(:disabled) { background: #b53131; transform: translateY(-2px); }
 .call-button:disabled { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); cursor: not-allowed; }
-
-
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: #1e2536; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); animation: pop 0.2s ease; }
 @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

@@ -10,10 +10,10 @@
         :class="{ 'is-next': index === 0 }"
       >
         <div class="item-header">
-          <span class="item-number">{{ ticket.ticketNumber || ticket.number }}</span>
+          <span class="item-number">{{ ticket.ticketCode || ticket.ticketNumber || ticket.number }}</span>
           <span v-if="index === 0" class="next-badge">{{ t('display.next') }}</span>
         </div>
-        <div class="item-purpose">{{ translatePurpose(ticket.purpose) }}</div>
+        <div class="item-purpose">{{ translatePurpose(ticket.purposeKey || ticket.purpose) }}</div>
         <div class="item-time">{{ formatLocalTime(ticket.createdAt) }}</div>
       </div>
     </div>
@@ -40,8 +40,9 @@ const { formatLocalTime } = useTime()
 defineProps({ tickets: { type: Array, default: () => [] } })
 
 function translatePurpose(purpose) {
-  if (purpose && te(purpose)) return t(purpose)
-  return purpose || '—'
+  if (!purpose) return '—'
+  if (te(purpose)) return t(purpose)
+  return purpose
 }
 </script>
 

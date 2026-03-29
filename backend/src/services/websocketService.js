@@ -67,7 +67,7 @@ exports.initializeWebSocket = (server) => {
     });
   });
   
-  logger.info('✅ WebSocket server initialized');
+  logger.info(' WebSocket server initialized');
   
   return io;
 };
