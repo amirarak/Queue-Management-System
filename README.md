@@ -93,3 +93,54 @@ npm run test:security
 - Staff can call, complete, and skip tickets
 - Display board shows serving, waiting, and history
 - `npm test` passes from root
+
+## Deploy With Docker Compose (Server IP, No SSL)
+
+This setup runs PostgreSQL, Redis, backend, and frontend (Nginx) with one command.
+
+### 1. Prepare environment
+
+Copy compose environment template and set values:
+
+```bash
+cp .env.compose.example .env
+```
+
+Required fields in `.env`:
+
+- `JWT_SECRET` (at least 32 chars)
+- `POSTGRES_PASSWORD`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `FRONTEND_URL` (set to `http://SERVER_IP`)
+
+Note:
+- Frontend calls backend through Nginx proxy at `/api`, so browser traffic is same-origin and avoids CORS issues.
+- PostgreSQL init scripts run only on first startup of a new DB volume.
+
+### 2. Build and start
+
+```bash
+docker compose up -d --build
+```
+
+### 3. Open app
+
+- Frontend: `http://SERVER_IP`
+- Health check: `http://SERVER_IP/health`
+- API base: `http://SERVER_IP/api`
+
+### 4. Useful commands
+
+```bash
+docker compose ps
+docker compose logs -f backend
+docker compose down
+```
+
+If you need to re-run DB initialization scripts, remove the PostgreSQL volume first:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```

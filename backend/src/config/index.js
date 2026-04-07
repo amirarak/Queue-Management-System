@@ -1,5 +1,9 @@
 const env = process.env.NODE_ENV || 'development';
 const jwtSecret = process.env.JWT_SECRET || (env === 'test' ? 'test-jwt-secret' : null);
+const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
 
 if (!jwtSecret) {
   throw new Error('JWT_SECRET must be set in environment variables');
@@ -29,5 +33,6 @@ module.exports = {
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
   },
   
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
+  frontendUrl: frontendUrls[0],
+  frontendUrls
 };
