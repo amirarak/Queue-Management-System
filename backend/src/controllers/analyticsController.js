@@ -132,6 +132,12 @@ exports.getPeriodStats = async (req, res, next) => {
     }
     const start = new Date(`${startDate}T00:00:00.000+06:00`);
     const end   = new Date(`${endDate}T23:59:59.999+06:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid date format' });
+    }
+    if (start > end) {
+      return res.status(400).json({ success: false, message: 'startDate must be before or equal to endDate' });
+    }
     const data  = await getStats({ createdAt: { [Op.between]: [start, end] } });
     res.json({ success: true, data });
   } catch (e) { next(e); }
@@ -142,6 +148,12 @@ exports.exportReport = async (req, res, next) => {
     const { startDate, endDate } = req.query;
     const start = startDate ? new Date(`${startDate}T00:00:00.000+06:00`) : getDayBoundsLocal().start;
     const end   = endDate   ? new Date(`${endDate}T23:59:59.999+06:00`)   : getDayBoundsLocal().end;
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid date format' });
+    }
+    if (start > end) {
+      return res.status(400).json({ success: false, message: 'startDate must be before or equal to endDate' });
+    }
 
     const tickets = await Ticket.findAll({
       where: { createdAt: { [Op.between]: [start, end] } },

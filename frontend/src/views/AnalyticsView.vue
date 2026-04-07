@@ -8,13 +8,13 @@
           <h1 class="page-title">{{ t('analytics.title') }}</h1>
           <p class="page-subtitle">{{ t('dept.name') }}</p>
         </div>
-        <button class="export-btn" @click="exportCSV">
+        <button class="export-btn" @click="exportXLSX">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          {{ exportLoading ? t('common.loading') : t('analytics.export') + ' (CSV)' }}
+          {{ exportLoading ? t('common.loading') : t('analytics.export') + ' (XLSX)' }}
         </button>
           <span v-if="exportError" style="color:#f87171;font-size:13px;display:block;margin-top:6px">{{ exportError }}</span>
       </div>
@@ -187,6 +187,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { analyticsAPI } from '@/services/api'
+import * as XLSX from 'xlsx'
 
 const { t, te } = useI18n()
 const loading = ref(false)
@@ -261,7 +262,7 @@ function formatSeconds(secs) {
     : `${mins} ${t('analytics.min')}`
 }
 
-async function exportCSV() {
+async function exportXLSX() {
   exportLoading.value = true
   try {
     let s, e
@@ -293,13 +294,21 @@ async function exportCSV() {
     t.completedAt ? new Date(t.completedAt).toLocaleString('ru-RU') : '',
     t.calledAt && t.createdAt ? Math.round((new Date(t.calledAt) - new Date(t.createdAt)) / 60000) : '',
     t.completedAt && t.calledAt ? Math.round((new Date(t.completedAt) - new Date(t.calledAt)) / 60000) : '',
-    t.status, t.servedByName || ''
+    t.status, t.servedBy || ''
   ])
-    const csv = '\uFEFF' + [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
+
+    const worksheet = XLSX.utils.aoa_to_sheet([h, ...rows])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics')
+    const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    a.download = `Отчет-${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.csv`
+    a.href = URL.createObjectURL(new Blob([xlsxBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }))
+    a.download = `Отчет-${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.xlsx`
     a.click()
+    URL.revokeObjectURL(a.href)
   } catch (e) {
     exportError.value = t('analytics.noData')
     setTimeout(() => exportError.value = '', 3000)

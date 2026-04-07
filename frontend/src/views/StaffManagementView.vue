@@ -9,12 +9,11 @@
         </div>
         <div class="header-actions">
           <button class="add-btn" @click="openCreate">+ {{ t('staffMgmt.addStaff') }}</button>
-          <span class="user-name">{{ authStore.userFullName }}</span>
-          <button class="logout-btn" @click="showLogoutConfirm = true">{{ t('common.logout') }}</button>
         </div>
       </div>
 
       <div class="table-card">
+        <div v-if="pageError" class="alert-error page-error">{{ pageError }}</div>
         <div v-if="loading" class="loading-state">
           <div class="spinner"></div>
           <p>{{ t('common.loading') }}</p>
@@ -25,6 +24,8 @@
             <tr>
               <th>{{ t('staffMgmt.fullName') }}</th>
               <th>Email</th>
+              <th>{{ t('staffMgmt.department') }}</th>
+              <th>{{ t('staffMgmt.windowLabel') }}</th>
               <th>{{ t('staffMgmt.role') }}</th>
               <th>{{ t('staffMgmt.status') }}</th>
               <th>{{ t('staffMgmt.lastLogin') }}</th>
@@ -40,6 +41,12 @@
                 </div>
               </td>
               <td class="email-cell">{{ member.username }}</td>
+              <!-- Faculty name translated via i18n key -->
+              <td class="dept-cell">{{ getDeptName(member) }}</td>
+              <td class="window-cell">
+                <span v-if="member.windowNumber" class="window-pill">{{ member.windowNumber }}</span>
+                <span v-else class="no-window">—</span>
+              </td>
               <td>
                 <span class="badge" :class="member.role">
                   {{ member.role === 'admin' ? t('staff.adminRole') : t('staff.staffRole') }}
@@ -65,14 +72,13 @@
               </td>
             </tr>
             <tr v-if="staffList.length === 0">
-              <td colspan="6" class="empty-row">{{ t('analytics.noData') }}</td>
+              <td colspan="8" class="empty-row">{{ t('analytics.noData') }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-   
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <div class="modal-header">
@@ -99,7 +105,26 @@
               <option value="admin">{{ t('staff.adminRole') }}</option>
             </select>
           </div>
-          <div v-if="modalError" class="alert-error">{{ modalError }}</div>
+          <div class="form-group">
+            <label>{{ t('staffMgmt.department') }}</label>
+            <select v-model="form.departmentId" class="form-input">
+              <option :value="null">{{ t('staffMgmt.noDepartment') }}</option>
+              <option v-for="d in departments" :key="d.id" :value="d.id">
+                {{ getDeptNameById(d.id) }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ t('staffMgmt.windowLabel') }}</label>
+            <input
+              v-model.number="form.windowNumber"
+              type="number" min="1" max="99"
+              class="form-input"
+              :placeholder="t('staffMgmt.windowPlaceholder')"
+            />
+            <span class="field-note">{{ t('staffMgmt.windowNote') }}</span>
+          </div>
+          <div v-if="modalError"   class="alert-error">{{ modalError }}</div>
           <div v-if="modalSuccess" class="alert-success">{{ modalSuccess }}</div>
         </div>
         <div class="modal-footer">
@@ -111,7 +136,6 @@
       </div>
     </div>
 
-  
     <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
       <div class="modal modal-sm">
         <div class="modal-header">
@@ -133,7 +157,6 @@
       </div>
     </div>
 
-    
     <div v-if="showLogoutConfirm" class="modal-overlay" @click.self="showLogoutConfirm = false">
       <div class="modal modal-sm">
         <div class="modal-header">
@@ -159,60 +182,94 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/authStore'
 import { adminAPI, authAPI } from '@/services/api'
+import api from '@/services/api'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
-const router = useRouter()
+const router    = useRouter()
 
-const loading = ref(false)
-const staffList = ref([])
-const showModal = ref(false)
-const showDeleteConfirm = ref(false)
-const showLogoutConfirm = ref(false)
-const editingStaff = ref(null)
-const deletingStaff = ref(null)
-const modalLoading = ref(false)
-const modalError = ref('')
-const modalSuccess = ref('')
+const loading            = ref(false)
+const pageError          = ref('')
+const staffList          = ref([])
+const departments        = ref([])
+const showModal          = ref(false)
+const showDeleteConfirm  = ref(false)
+const showLogoutConfirm  = ref(false)
+const editingStaff       = ref(null)
+const deletingStaff      = ref(null)
+const modalLoading       = ref(false)
+const modalError         = ref('')
+const modalSuccess       = ref('')
 
-const form = reactive({ fullName: '', username: '', role: 'staff' })
+const form = reactive({
+  fullName: '', username: '', role: 'staff', departmentId: null, windowNumber: null
+})
 const formErrors = reactive({ fullName: '', username: '' })
 
-async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
+const DEPT_I18N = {
+  ENG: 'departments.engineering',
+  ECO: 'departments.economics',
+  SOC: 'departments.social',
+  MED: 'departments.medicine',
+  HUM: 'departments.humanities',
+}
+const DEPT_ID_TO_CODE = { 1: 'ENG', 2: 'ECO', 3: 'SOC', 4: 'MED', 5: 'HUM' }
+
+function getDeptName(member) {
+  if (!member.departmentId) return '—'
+  const code = DEPT_ID_TO_CODE[member.departmentId] || member.department?.code
+  if (code && DEPT_I18N[code] && te(DEPT_I18N[code])) return t(DEPT_I18N[code])
+  return member.department?.nameRu || member.department?.nameEn || '—'
+}
+
+function getDeptNameById(id) {
+  const code = DEPT_ID_TO_CODE[id]
+  if (code && DEPT_I18N[code] && te(DEPT_I18N[code])) return t(DEPT_I18N[code])
+  const d = departments.value.find(d => d.id === id)
+  return d?.nameRu || d?.nameEn || `Dept ${id}`
 }
 
 async function loadStaff() {
   loading.value = true
+  pageError.value = ''
   try {
     const res = await adminAPI.getStaff()
     staffList.value = res.data.data || []
   } catch (e) {
-    console.error('loadStaff error:', e)
-  } finally {
-    loading.value = false
+    pageError.value = e.response?.data?.message || t('common.error')
+  }
+  finally { loading.value = false }
+}
+
+async function loadDepartments() {
+  pageError.value = ''
+  try {
+    const res = await api.get('/users/departments')
+    departments.value = res.data.data || []
+  } catch (e) {
+    pageError.value = e.response?.data?.message || t('common.error')
   }
 }
 
 function openCreate() {
   editingStaff.value = null
-  form.fullName = form.username = ''
-  form.role = 'staff'
+  Object.assign(form, { fullName: '', username: '', role: 'staff', departmentId: null, windowNumber: null })
   formErrors.fullName = formErrors.username = ''
-  modalError.value = ''
-  modalSuccess.value = ''
+  modalError.value = modalSuccess.value = ''
   showModal.value = true
 }
 
 function openEdit(member) {
   editingStaff.value = member
-  form.fullName = member.fullName
-  form.username = member.username
-  form.role = member.role
+  Object.assign(form, {
+    fullName:     member.fullName,
+    username:     member.username,
+    role:         member.role,
+    departmentId: member.departmentId || null,
+    windowNumber: member.windowNumber || null
+  })
   formErrors.fullName = formErrors.username = ''
-  modalError.value = ''
-  modalSuccess.value = ''
+  modalError.value = modalSuccess.value = ''
   showModal.value = true
 }
 
@@ -225,18 +282,23 @@ function confirmDelete(member) {
 function closeModal() {
   showModal.value = false
   editingStaff.value = null
+  modalError.value = ''
+  modalSuccess.value = ''
 }
 
 function validate() {
   formErrors.fullName = formErrors.username = ''
   let ok = true
-  if (!form.fullName.trim() || form.fullName.length < 3) {
-    formErrors.fullName = t('profile.nameMinLength')
-    ok = false
-  }
-  if (!editingStaff.value && !form.username.includes('@')) {
+  if (!form.fullName.trim() || form.fullName.length < 3) { formErrors.fullName = t('profile.nameMinLength'); ok = false }
+  if (!editingStaff.value && !/^[^\s@]+@alatoo\.edu\.kg$/.test(form.username || '')) {
     formErrors.username = t('login.emailInvalid')
     ok = false
+  }
+  if (form.windowNumber !== null && form.windowNumber !== undefined) {
+    if (!Number.isInteger(form.windowNumber) || form.windowNumber < 1 || form.windowNumber > 99) {
+      modalError.value = t('staffMgmt.windowNote')
+      ok = false
+    }
   }
   return ok
 }
@@ -245,27 +307,34 @@ async function handleSubmit() {
   if (!validate()) return
   modalLoading.value = true
   modalError.value = ''
+  pageError.value = ''
   try {
     if (editingStaff.value) {
-      await adminAPI.updateStaff(editingStaff.value.id, { fullName: form.fullName, role: form.role })
+      await adminAPI.updateStaff(editingStaff.value.id, {
+        fullName: form.fullName, role: form.role,
+        departmentId: form.departmentId,
+        windowNumber: form.windowNumber || null
+      })
       modalSuccess.value = t('staffMgmt.updateSuccess')
     } else {
-      
-      await authAPI.register({ fullName: form.fullName, username: form.username, role: form.role })
+      await authAPI.register({
+        fullName: form.fullName, username: form.username, role: form.role,
+        departmentId: form.departmentId,
+        windowNumber: form.windowNumber || null
+      })
       modalSuccess.value = t('staff.createSuccess')
     }
     await loadStaff()
-    setTimeout(() => { closeModal(); modalSuccess.value = '' }, 1500)
+    setTimeout(() => { closeModal() }, 1200)
   } catch (e) {
     modalError.value = e.response?.data?.message || t('staff.createError')
-  } finally {
-    modalLoading.value = false
-  }
+  } finally { modalLoading.value = false }
 }
 
 async function handleDelete() {
   if (!deletingStaff.value) return
   modalLoading.value = true
+  modalError.value = ''
   try {
     await adminAPI.deleteStaff(deletingStaff.value.id)
     staffList.value = staffList.value.filter(s => s.id !== deletingStaff.value.id)
@@ -273,28 +342,35 @@ async function handleDelete() {
     deletingStaff.value = null
   } catch (e) {
     modalError.value = e.response?.data?.message || t('common.error')
-  } finally {
-    modalLoading.value = false
   }
+  finally { modalLoading.value = false }
 }
 
 async function toggleActive(member) {
   try {
     await adminAPI.updateStaff(member.id, { isActive: !member.isActive })
     member.isActive = !member.isActive
-  } catch (e) { console.error(e) }
+    pageError.value = ''
+  } catch (e) {
+    pageError.value = e.response?.data?.message || t('common.error')
+  }
+}
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
 }
 
 function formatDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(d).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
 }
 
-onMounted(() => loadStaff())
+onMounted(() => { loadStaff(); loadDepartments() })
 </script>
 
 <style scoped>
-.management-page { min-height: 100vh; background: var(--color-primary); color: white; padding: 40px; font-family: 'Segoe UI', sans-serif; }
+.management-page { min-height: 100vh; background: var(--color-primary); color: white; padding: 40px; }
 .page-container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
 .page-header { background: rgba(28,31,44,0.95); border-radius: var(--border-radius-lg); padding: 30px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
 .page-title { font-size: 32px; font-weight: 700; margin: 0 0 6px; }
@@ -318,17 +394,21 @@ onMounted(() => loadStaff())
 .name-cell { display: flex; align-items: center; gap: 12px; }
 .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-accent); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
 .email-cell { color: rgba(255,255,255,0.5); font-size: 14px; }
-.time-cell { color: rgba(255,255,255,0.4); font-size: 13px; }
+.dept-cell  { color: rgba(255,255,255,0.65); font-size: 13px; max-width: 200px; }
+.time-cell  { color: rgba(255,255,255,0.4); font-size: 13px; }
+.window-cell { text-align: left; vertical-align: middle; }
+.window-pill { display: inline-block; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); padding: 4px 14px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+.no-window { color: rgba(255,255,255,0.25); }
 .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-.badge.admin { background: rgba(220,38,38,0.2); color: #f87171; }
-.badge.staff { background: rgba(59,130,246,0.2); color: #93c5fd; }
-.badge.active { background: rgba(34,197,94,0.2); color: #86efac; }
+.badge.admin    { background: rgba(220,38,38,0.2); color: #f87171; }
+.badge.staff    { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.badge.active   { background: rgba(34,197,94,0.2); color: #86efac; }
 .badge.inactive { background: rgba(156,163,175,0.15); color: #9ca3af; }
 .action-btns { display: flex; gap: 6px; }
 .icon-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 15px; transition: all 0.2s; }
-.icon-btn.edit:hover { background: rgba(59,130,246,0.2); }
+.icon-btn.edit:hover   { background: rgba(59,130,246,0.2); }
 .icon-btn.toggle:hover { background: rgba(245,158,11,0.2); }
-.icon-btn.del:hover { background: rgba(220,38,38,0.2); }
+.icon-btn.del:hover    { background: rgba(220,38,38,0.2); }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: #1e2536; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); animation: pop 0.2s ease; }
 .modal-sm { max-width: 400px; }
@@ -337,7 +417,7 @@ onMounted(() => loadStaff())
 .modal-header h2 { font-size: 18px; color: white; margin: 0; }
 .modal-close { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 18px; cursor: pointer; }
 .modal-close:hover { color: white; }
-.modal-body { padding: 24px 28px; }
+.modal-body { padding: 24px 28px; max-height: 70vh; overflow-y: auto; }
 .confirm-text { color: rgba(255,255,255,0.75); font-size: 15px; line-height: 1.6; margin: 0; }
 .form-group { margin-bottom: 18px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
@@ -347,13 +427,11 @@ onMounted(() => loadStaff())
 .form-input option { background: #1e2536; color: white; }
 .err { display: block; color: #f87171; font-size: 12px; margin-top: 4px; }
 .field-note { display: block; color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px; font-style: italic; }
-.alert-error { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
+.alert-error   { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
 .alert-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #86efac; padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
+.page-error { margin: 16px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 28px; border-top: 1px solid rgba(255,255,255,0.08); }
 .btn-cancel { padding: 10px 20px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: none; border-radius: 8px; cursor: pointer; font-size: 15px; }
-.btn-cancel:hover { background: rgba(255,255,255,0.12); }
-.btn-submit { padding: 10px 24px; background: var(--color-accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
-.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-delete { padding: 10px 24px; background: var(--color-accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
-.btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-submit, .btn-delete { padding: 10px 24px; background: var(--color-accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
+.btn-submit:disabled, .btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

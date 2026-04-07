@@ -13,7 +13,7 @@ function generateToken(length = 32) {
 
 exports.register = async (req, res, next) => {
   try {
-    const { username, password, fullName, role, departmentId } = req.body;
+    const { username, password, fullName, role, departmentId, windowNumber } = req.body;
 
     const existing = await User.findOne({ where: { username } });
     if (existing) {
@@ -28,15 +28,18 @@ exports.register = async (req, res, next) => {
       fullName,
       role: role || 'staff',
       departmentId: departmentId || null,
+      windowNumber: windowNumber || null,
       isVerified: false,
       isActive: true,
       verificationToken: inviteToken
     });
 
+    let inviteEmailSent = true;
     try {
       await emailService.sendInviteEmail(username, fullName, inviteToken);
       logger.info(`Invite email sent to ${username}`);
     } catch (emailErr) {
+      inviteEmailSent = false;
       logger.error('Failed to send invite email:', emailErr);
     }
 
@@ -44,8 +47,18 @@ exports.register = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: `Сотрудник создан. Письмо отправлено на ${username}`,
-      data: { id: user.id, username: user.username, fullName: user.fullName, role: user.role, departmentId: user.departmentId }
+      message: inviteEmailSent
+        ? `Сотрудник создан. Письмо отправлено на ${username}`
+        : `Сотрудник создан, но отправка письма не удалась. Проверьте SMTP настройки.`,
+      data: {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        role: user.role,
+        departmentId: user.departmentId,
+        windowNumber: user.windowNumber,
+        inviteEmailSent
+      }
     });
   } catch (error) { next(error); }
 };
@@ -53,12 +66,6 @@ exports.register = async (req, res, next) => {
 exports.setPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
-    if (!token || !password) {
-      return res.status(400).json({ success: false, message: 'Токен и пароль обязательны' });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ success: false, message: 'Пароль должен быть минимум 8 символов' });
-    }
     const user = await User.findOne({ where: { verificationToken: token } });
     if (!user) {
       return res.status(400).json({ success: false, message: 'Ссылка недействительна или уже использована' });
@@ -133,9 +140,6 @@ exports.changePassword = async (req, res, next) => {
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { username } = req.body;
-    if (!username) {
-      return res.status(400).json({ success: false, message: 'Email обязателен' });
-    }
 
     const user = await User.findOne({ where: { username } });
 

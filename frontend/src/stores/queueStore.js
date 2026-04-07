@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { queueAPI, ticketsAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
 
 export const useQueueStore = defineStore('queue', () => {
   const tickets       = ref([])
@@ -13,25 +14,41 @@ export const useQueueStore = defineStore('queue', () => {
   const currentDate    = computed(() => new Date().toLocaleDateString('ru-RU'))
   const completedCount = computed(() => tickets.value.filter(t => t.status === 'completed').length)
 
-  async function fetchQueue() {
+  function getScopedDepartmentId() {
+    const authStore = useAuthStore()
+    if (authStore.user?.role === 'staff') return authStore.user?.departmentId || null
+    return null
+  }
+
+  async function fetchQueue(departmentId = undefined) {
     try {
-      const res = await queueAPI.getQueue()
+      const scopedDepartmentId = departmentId !== undefined ? departmentId : getScopedDepartmentId()
+      const res = await queueAPI.getQueue(scopedDepartmentId)
       tickets.value = res.data.data.tickets || []
-    } catch (e) { error.value = 'Ошибка загрузки очереди' }
+    } catch (e) {
+      error.value = e.response?.data?.message || 'Ошибка загрузки очереди'
+    }
   }
 
-  async function fetchCurrent() {
+  async function fetchCurrent(departmentId = undefined) {
     try {
-      const res = await queueAPI.getCurrent()
+      const scopedDepartmentId = departmentId !== undefined ? departmentId : getScopedDepartmentId()
+      const res = await queueAPI.getCurrent(scopedDepartmentId)
       currentTicket.value = res.data.data
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      error.value = e.response?.data?.message || 'Ошибка загрузки активного талона'
+    }
   }
 
-  async function fetchHistory() {
+  async function fetchHistory(departmentId = undefined) {
     try {
-      const res = await queueAPI.getHistory({ limit: 5 })
+      const scopedDepartmentId = departmentId !== undefined ? departmentId : getScopedDepartmentId()
+      const params = { limit: 5, ...(scopedDepartmentId ? { departmentId: scopedDepartmentId } : {}) }
+      const res = await queueAPI.getHistory(params)
       calledTickets.value = res.data.data || []
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      error.value = e.response?.data?.message || 'Ошибка загрузки истории вызовов'
+    }
   }
 
   async function generateTicket(studentName, purposeKey, departmentId, serviceTypeId = null) {
@@ -105,8 +122,9 @@ export const useQueueStore = defineStore('queue', () => {
   }
 
 
-  async function initialize() {
-    await Promise.all([fetchQueue(), fetchCurrent(), fetchHistory()])
+  async function initialize(departmentId = undefined) {
+    error.value = null
+    await Promise.all([fetchQueue(departmentId), fetchCurrent(departmentId), fetchHistory(departmentId)])
   }
 
   return {

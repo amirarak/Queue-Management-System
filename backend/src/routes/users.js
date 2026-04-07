@@ -3,6 +3,7 @@ const router  = express.Router();
 const { User, Department } = require('../models');
 const { authenticate } = require('../middlewares/auth');
 const authController = require('../controllers/authController');
+const { validate, registerSchema, updateUserSchema } = require('../middlewares/validation');
 
 function adminOnly(req, res, next) {
   if (req.user?.role !== 'admin') {
@@ -24,7 +25,8 @@ router.get('/departments', async (req, res, next) => {
 router.get('/', authenticate, adminOnly, async (req, res, next) => {
   try {
     const users = await User.findAll({
-      attributes: ['id','username','fullName','role','isActive','isVerified','lastLogin','createdAt','departmentId'],
+      attributes: ['id','username','fullName','role','isActive','isVerified',
+                   'lastLogin','createdAt','departmentId','windowNumber'],
       include: [{ model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn'], required: false }],
       order: [['createdAt', 'DESC']]
     });
@@ -32,9 +34,9 @@ router.get('/', authenticate, adminOnly, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/', authenticate, adminOnly, authController.register);
+router.post('/', authenticate, adminOnly, validate(registerSchema), authController.register);
 
-router.put('/:id', authenticate, adminOnly, async (req, res, next) => {
+router.put('/:id', authenticate, adminOnly, validate(updateUserSchema), async (req, res, next) => {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -42,12 +44,13 @@ router.put('/:id', authenticate, adminOnly, async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Cannot modify your own account here' });
     }
 
-    const { fullName, role, isActive, departmentId } = req.body;
+    const { fullName, role, isActive, departmentId, windowNumber } = req.body;
     await user.update({
-      ...(fullName     !== undefined && { fullName }),
-      ...(role         !== undefined && { role }),
-      ...(isActive     !== undefined && { isActive }),
-      ...(departmentId !== undefined && { departmentId: departmentId || null })
+      ...(fullName      !== undefined && { fullName }),
+      ...(role          !== undefined && { role }),
+      ...(isActive      !== undefined && { isActive }),
+      ...(departmentId  !== undefined && { departmentId: departmentId || null }),
+      ...(windowNumber  !== undefined && { windowNumber: windowNumber || null })
     });
 
     await user.reload({

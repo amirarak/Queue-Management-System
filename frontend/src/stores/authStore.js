@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user            = ref(null)
   const token           = ref(null)
   const isAuthenticated = ref(false)
+  const initialized     = ref(false)
   const loading         = ref(false)
   const error           = ref(null)
 
@@ -65,10 +66,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function checkAuth() {
+    if (initialized.value) return
+
     const savedToken = localStorage.getItem('auth_token')
     const savedUser  = localStorage.getItem('user')
 
-    if (!savedToken || !savedUser) return  
+    if (!savedToken || !savedUser) {
+      initialized.value = true
+      return
+    }
 
     token.value           = savedToken
     user.value            = JSON.parse(savedUser)
@@ -86,13 +92,13 @@ export const useAuthStore = defineStore('auth', () => {
       isAuthenticated.value = false
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
+    } finally {
+      initialized.value = true
     }
   }
 
-  checkAuth()
-
   return {
-    user, token, isAuthenticated, loading, error,
+    user, token, isAuthenticated, initialized, loading, error,
     isAdmin, isStaff, userFullName,
     login, register, logout, checkAuth
   }

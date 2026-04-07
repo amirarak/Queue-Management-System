@@ -17,7 +17,15 @@ export default {
     cancel: 'Cancel',
     close: 'Close',
     logout: 'Logout',
-    back: 'Back'
+    back: 'Back',
+    yes: 'Yes',
+    no: 'No',
+    tryAgain: 'Try again'
+  },
+
+  logout: {
+    confirmTitle: 'Sign Out',
+    confirmText: 'Are you sure you want to sign out?'
   },
 
   departments: {
@@ -78,7 +86,8 @@ export default {
     recentlyCalled: 'Recently Called',
     queue: 'Queue',
     next: 'Next',
-    emptyQueue: 'Queue is empty'
+    emptyQueue: 'Queue is empty',
+    window: 'Window'
   },
 
   staff: {
@@ -121,7 +130,10 @@ export default {
     noDepartment: 'No Faculty',
     emailNote:    'Staff member will receive an email to set their password',
     emailLabel:   'Corporate Email',
-    logoutConfirmText: 'Are you sure you want to sign out?'
+    logoutConfirmText: 'Are you sure you want to sign out?',
+    windowLabel:       'Window Number',
+    windowPlaceholder: 'E.g.: 1',
+    windowNote:        'The window number students should approach when called'
   },
 
   analytics: {

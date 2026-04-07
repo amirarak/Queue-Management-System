@@ -7,6 +7,11 @@
 
     <div v-if="loading" class="dept-loading">{{ $t('common.loading') }}</div>
 
+    <div v-else-if="error" class="dept-error-wrap">
+      <p class="dept-error">{{ error }}</p>
+      <button class="dept-retry" @click="loadDepartments">{{ $t('common.tryAgain') || 'Retry' }}</button>
+    </div>
+
     <div v-else class="dept-grid">
       <button
         v-for="dept in departments"
@@ -38,6 +43,7 @@ defineEmits(['select', 'back'])
 
 const departments = ref([])
 const loading     = ref(true)
+const error       = ref('')
 
 function getDeptName(dept) {
   if (locale.value === 'en') return dept.nameEn
@@ -45,16 +51,20 @@ function getDeptName(dept) {
   return dept.nameRu
 }
 
-onMounted(async () => {
+async function loadDepartments() {
+  loading.value = true
+  error.value = ''
   try {
-    const res    = await api.get('/users/departments')
+    const res = await api.get('/users/departments')
     departments.value = res.data.data
   } catch (e) {
-    console.error('Failed to load departments:', e)
+    error.value = e.response?.data?.message || 'Failed to load departments'
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadDepartments)
 </script>
 
 <style scoped>
@@ -81,6 +91,34 @@ onMounted(async () => {
 .dept-loading {
   color: rgba(255,255,255,0.5);
   font-size: 16px;
+}
+
+.dept-error-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.dept-error {
+  color: #fecaca;
+  font-size: 15px;
+  margin: 0;
+}
+
+.dept-retry {
+  background: #dc2626;
+  border: 1px solid #ef4444;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.dept-retry:hover {
+  background: #b91c1c;
 }
 
 .dept-grid {

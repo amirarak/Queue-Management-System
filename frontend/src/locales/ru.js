@@ -17,7 +17,15 @@ export default {
     cancel: 'Отмена',
     close: 'Закрыть',
     logout: 'Выйти',
-    back: 'Назад'
+    back: 'Назад',
+    yes: 'Да',
+    no: 'Нет',
+    tryAgain: 'Повторить'
+  },
+
+  logout: {
+    confirmTitle: 'Выход из системы',
+    confirmText: 'Вы действительно хотите выйти?'
   },
 
   departments: {
@@ -78,7 +86,8 @@ export default {
     recentlyCalled: 'Недавно вызванные',
     queue: 'Очередь',
     next: 'Следующий',
-    emptyQueue: 'Очередь пуста'
+    emptyQueue: 'Очередь пуста',
+    window: 'Окно'
   },
 
   staff: {
@@ -121,7 +130,10 @@ export default {
     noDepartment: 'Без факультета',
     emailNote:    'Сотрудник получит письмо для установки пароля',
     emailLabel:   'Корпоративная почта',
-    logoutConfirmText: 'Вы действительно хотите выйти из системы?'
+    logoutConfirmText: 'Вы действительно хотите выйти из системы?',
+    windowLabel:       'Номер окна',
+    windowPlaceholder: 'Например: 1',
+    windowNote:        'Номер окна, к которому подходит студент при вызове'
   },
 
   analytics: {

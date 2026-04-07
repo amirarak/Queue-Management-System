@@ -57,6 +57,12 @@ const Ticket = sequelize.define('tickets', {
     field: 'served_by'
   },
 
+  windowNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'window_number'
+  },
+
   qrCode:      { type: DataTypes.TEXT,    allowNull: true, field: 'qr_code' },
   calledAt:    { type: DataTypes.DATE,    allowNull: true, field: 'called_at' },
   completedAt: { type: DataTypes.DATE,    allowNull: true, field: 'completed_at' },

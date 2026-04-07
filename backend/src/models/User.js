@@ -15,6 +15,12 @@ const User = sequelize.define('users', {
     field: 'department_id'
   },
 
+  windowNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'window_number'
+  },
+
   isActive:          { type: DataTypes.BOOLEAN, defaultValue: true,  field: 'is_active' },
   isVerified:        { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_verified' },
   verificationToken: { type: DataTypes.STRING(255), allowNull: true, field: 'verification_token' },

@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx jest --config backend/tests/package.json --coverage --verbose",
+    "test:auth": "npx jest --config backend/tests/package.json backend/tests/auth.test.js --verbose",
+    "test:queue": "npx jest --config backend/tests/package.json backend/tests/queue.test.js --verbose",
+    "test:kiosk": "npx jest --config backend/tests/package.json backend/tests/kiosk.test.js --verbose",
+    "test:display": "npx jest --config backend/tests/package.json backend/tests/display.test.js --verbose",
+    "test:staff": "npx jest --config backend/tests/package.json backend/tests/staff.test.js --verbose",
+    "test:analytics": "npx jest --config backend/tests/package.json backend/tests/analytics.test.js --verbose",
+    "test:security": "npx jest --config backend/tests/package.json backend/tests/security.test.js --verbose"
   },
   "keywords": [],
   "author": "",

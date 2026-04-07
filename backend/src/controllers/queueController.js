@@ -12,19 +12,14 @@ exports.getQueue = async (req, res, next) => {
       status: 'waiting',
       createdAt: { [Op.between]: [start, end] }
     };
-
     if (req.user && req.user.role !== 'admin' && req.user.departmentId) {
       where.departmentId = req.user.departmentId;
     }
-
     const tickets = await Ticket.findAll({
       where,
-      include: [
-        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }
-      ],
+      include: [{ model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }],
       order: [['ticketNumber', 'ASC']]
     });
-
     res.json({ success: true, data: { tickets, count: tickets.length } });
   } catch (error) { next(error); }
 };
@@ -32,76 +27,78 @@ exports.getQueue = async (req, res, next) => {
 exports.getCurrentTicket = async (req, res, next) => {
   try {
     const where = { status: 'serving' };
-
     if (req.user && req.user.role !== 'admin' && req.user.departmentId) {
       where.departmentId = req.user.departmentId;
     }
-
     const ticket = await Ticket.findOne({
       where,
       include: [
-        { model: User, as: 'server', attributes: ['id', 'fullName'], required: false }
+        { model: User,       as: 'server',     attributes: ['id','fullName','windowNumber'], required: false },
+        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }
       ],
       order: [['calledAt', 'DESC']]
     });
-
     res.json({ success: true, data: ticket });
+  } catch (error) { next(error); }
+};
+
+// All tickets currently being served across ALL departments — used by display board
+exports.getServingTickets = async (req, res, next) => {
+  try {
+    const tickets = await Ticket.findAll({
+      where: { status: 'serving' },
+      include: [
+        { model: User,       as: 'server',     attributes: ['id','fullName','windowNumber'], required: false },
+        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }
+      ],
+      order: [['calledAt', 'DESC']]
+    });
+    res.json({ success: true, data: tickets });
   } catch (error) { next(error); }
 };
 
 exports.callNextTicket = async (req, res, next) => {
   try {
-    const servingWhere = { status: 'serving' };
-    if (req.user.role !== 'admin' && req.user.departmentId) {
-      servingWhere.departmentId = req.user.departmentId;
-    }
-
-    const servingTicket = await Ticket.findOne({ where: servingWhere });
-    if (servingTicket) {
-      return res.status(400).json({
-        success: false,
-        message: 'Another ticket is currently being served. Complete it first.'
-      });
+    const myServingTicket = await Ticket.findOne({ where: { status: 'serving', servedBy: req.user.id } });
+    if (myServingTicket) {
+      return res.status(400).json({ success: false, message: 'Another ticket is currently being served. Complete it first.' });
     }
 
     const { start, end } = getDayBounds();
-    const nextWhere = {
-      status: 'waiting',
-      createdAt: { [Op.between]: [start, end] }
-    };
+    const nextWhere = { status: 'waiting', createdAt: { [Op.between]: [start, end] } };
     if (req.user.role !== 'admin' && req.user.departmentId) {
       nextWhere.departmentId = req.user.departmentId;
     }
 
-    const nextTicket = await Ticket.findOne({
-      where: nextWhere,
-      order: [['ticketNumber', 'ASC']]
-    });
-
+    const nextTicket = await Ticket.findOne({ where: nextWhere, order: [['ticketNumber', 'ASC']] });
     if (!nextTicket) {
       return res.status(404).json({ success: false, message: 'No waiting tickets in queue' });
     }
 
-    const calledAt = new Date();
-    const waitTime = getSecondsDiff(nextTicket.createdAt, calledAt);
+    const staffUser = await User.findByPk(req.user.id, { attributes: ['id','fullName','windowNumber'] });
+    const calledAt  = new Date();
+    const waitTime  = getSecondsDiff(nextTicket.createdAt, calledAt);
 
     await nextTicket.update({
-      status: 'serving',
-      calledAt,
-      waitTime,
-      servedBy: req.user.id
+      status: 'serving', calledAt, waitTime,
+      servedBy: req.user.id,
+      windowNumber: staffUser?.windowNumber || null
     });
 
     await nextTicket.reload({
       include: [
-        { model: User, as: 'server', attributes: ['id', 'fullName'], required: false }
+        { model: User,       as: 'server',     attributes: ['id','fullName','windowNumber'], required: false },
+        { model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }
       ]
     });
 
-    try { await redisHelper.set('current', nextTicket, 3600); } catch(e) {}
-
-    broadcastEvent('ticket:called', { ticket: nextTicket });
-    logger.info(`Ticket called: #${nextTicket.ticketNumber} by ${req.user.fullName}`);
+    try {
+      await redisHelper.set('current', nextTicket, 3600);
+    } catch (e) {
+      logger.warn('Failed to update current ticket cache', { error: e.message });
+    }
+    broadcastEvent('ticket:called', { ticket: nextTicket, departmentId: nextTicket.departmentId });
+    logger.info(`Ticket called: #${nextTicket.ticketNumber} by ${req.user.fullName} (window ${staffUser?.windowNumber || '—'})`);
 
     res.json({ success: true, message: 'Ticket called successfully', data: nextTicket });
   } catch (error) { next(error); }
@@ -111,23 +108,19 @@ exports.completeTicket = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
-
     const ticket = await Ticket.findByPk(id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
-    if (ticket.status !== 'serving') {
-      return res.status(400).json({ success: false, message: 'Only serving tickets can be completed' });
-    }
-
+    if (ticket.status !== 'serving') return res.status(400).json({ success: false, message: 'Only serving tickets can be completed' });
     const completedAt = new Date();
     const serviceTime = getSecondsDiff(ticket.calledAt, completedAt);
-
     await ticket.update({ status: 'completed', completedAt, serviceTime, notes: notes || null });
-
-    try { await redisHelper.del('current'); } catch(e) {}
-
-    broadcastEvent('ticket:completed', { ticketId: id });
+    try {
+      await redisHelper.del('current');
+    } catch (e) {
+      logger.warn('Failed to clear current ticket cache on complete', { error: e.message });
+    }
+    broadcastEvent('ticket:completed', { ticketId: id, departmentId: ticket.departmentId });
     logger.info(`Ticket completed: #${ticket.ticketNumber}`);
-
     res.json({ success: true, message: 'Ticket completed successfully', data: ticket });
   } catch (error) { next(error); }
 };
@@ -135,40 +128,31 @@ exports.completeTicket = async (req, res, next) => {
 exports.skipTicket = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const ticket = await Ticket.findByPk(id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
-    if (ticket.status !== 'serving') {
-      return res.status(400).json({ success: false, message: 'Only serving tickets can be skipped' });
-    }
-
+    if (ticket.status !== 'serving') return res.status(400).json({ success: false, message: 'Only serving tickets can be skipped' });
     const completedAt = new Date();
     const serviceTime = getSecondsDiff(ticket.calledAt, completedAt);
-
-    await ticket.update({
-      status: 'cancelled',
-      completedAt,
-      serviceTime,
-      notes: 'skipped'
-    });
-
-    try { await redisHelper.del('current'); } catch(e) {}
-
-    broadcastEvent('ticket:cancelled', { ticketId: id });
+    await ticket.update({ status: 'cancelled', completedAt, serviceTime, notes: 'skipped' });
+    try {
+      await redisHelper.del('current');
+    } catch (e) {
+      logger.warn('Failed to clear current ticket cache on skip', { error: e.message });
+    }
+    broadcastEvent('ticket:cancelled', { ticketId: id, departmentId: ticket.departmentId });
     logger.info(`Ticket skipped: #${ticket.ticketNumber}`);
-
     res.json({ success: true, message: 'Ticket skipped', data: ticket });
   } catch (error) { next(error); }
 };
 
+// History — includes windowNumber for display board "→ Window N"
 exports.getCalledHistory = async (req, res, next) => {
   try {
-    const { limit = 5 } = req.query;
+    const { limit = 8 } = req.query;
     const { start, end } = getDayBounds();
 
     const where = {
-      status: { [Op.in]: ['serving', 'completed'] },
-      calledAt: { [Op.not]: null },
+      calledAt:  { [Op.not]: null },
       createdAt: { [Op.between]: [start, end] }
     };
     if (req.user && req.user.role !== 'admin' && req.user.departmentId) {
@@ -177,6 +161,9 @@ exports.getCalledHistory = async (req, res, next) => {
 
     const tickets = await Ticket.findAll({
       where,
+      attributes: ['id','ticketNumber','ticketCode','status',
+                   'purposeKey','purpose','departmentId',
+                   'calledAt','windowNumber'],
       order: [['calledAt', 'DESC']],
       limit: parseInt(limit)
     });

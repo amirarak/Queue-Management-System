@@ -1,10 +1,17 @@
+const env = process.env.NODE_ENV || 'development';
+const jwtSecret = process.env.JWT_SECRET || (env === 'test' ? 'test-jwt-secret' : null);
+
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET must be set in environment variables');
+}
+
 module.exports = {
-  env: process.env.NODE_ENV || 'development',
+  env,
   port: process.env.PORT || 3001,
   apiPrefix: process.env.API_PREFIX || '/api',
   
   jwt: {
-    secret: process.env.JWT_SECRET || 'change-this-secret',
+    secret: jwtSecret,
     expire: process.env.JWT_EXPIRE || '1h',
     refreshExpire: process.env.JWT_REFRESH_EXPIRE || '7d'
   },
@@ -22,5 +29,5 @@ module.exports = {
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
   },
   
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
 };

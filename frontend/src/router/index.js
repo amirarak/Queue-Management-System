@@ -30,9 +30,12 @@ const routes = [
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   document.title = `${to.meta.title || 'Электронная очередь'} | Ala-Too`
   const authStore = useAuthStore()
+  if (!authStore.initialized) {
+    await authStore.checkAuth()
+  }
   if (to.meta.requiresAuth && !authStore.isAuthenticated) return next('/login')
   if (to.meta.guestOnly  && authStore.isAuthenticated)    return next('/staff')
   if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') return next('/staff')

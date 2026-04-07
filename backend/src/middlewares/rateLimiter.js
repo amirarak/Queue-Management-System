@@ -32,3 +32,12 @@ exports.ticketLimiter = rateLimit({
     message: 'Too many tickets created, please slow down'
   }
 });
+
+exports.analyticsExportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: 'Too many export requests, please try again later'
+  }
+});

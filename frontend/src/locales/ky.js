@@ -18,7 +18,8 @@ export default {
     logout: 'Чыгуу',
     back: 'Артка',
     yes: 'Ооба, чыгуу',
-    no: 'Жокко чыгаруу'
+    no: 'Жокко чыгаруу',
+    tryAgain: 'Кайра аракет кылуу'
   },
 
   logout: {
@@ -80,7 +81,8 @@ export default {
     recentlyCalled: 'Жакында чакырылгандар',
     queue: 'Кезек',
     next: 'Кийинки',
-    emptyQueue: 'Кезек бош'
+    emptyQueue: 'Кезек бош',
+    window: 'Терезе'
   },
 
   staff: {
@@ -125,7 +127,10 @@ export default {
     noDepartment: 'Факультети жок',
     emailNote:    'Кызматкер сырсөз коюу үчүн кат алат',
     emailLabel:   'Корпоративдик почта',
-    logoutConfirmText: 'Чындап эле тутумдан чыккыңыз келеби?'
+    logoutConfirmText: 'Чындап эле тутумдан чыккыңыз келеби?',
+    windowLabel:       'Терезе номери',
+    windowPlaceholder: 'Мисалы: 1',
+    windowNote:        'Чакырылганда студент кайсы терезеге барары'
   },
 
   analytics: {

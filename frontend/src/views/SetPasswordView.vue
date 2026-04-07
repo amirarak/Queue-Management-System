@@ -94,7 +94,7 @@ function validate() {
     return false
   }
   if (password.value !== passwordConfirm.value) {
-    errors.value.confirm = t('profile.passwordMismatch')
+    errors.value.confirm = t('profile.passwordsNoMatch')
     return false
   }
   return true
