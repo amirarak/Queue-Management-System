@@ -33,11 +33,31 @@
         <template v-if="selectedPeriod === 'custom'">
           <div class="filter-group">
             <label>{{ t('analytics.from') }}</label>
-            <input v-model="customDates.start" type="date" class="filter-select" />
+            <VueDatePicker
+              v-model="customDates.start"
+              model-type="yyyy-MM-dd"
+              :locale="datepickerLocale"
+              :enable-time-picker="false"
+              :clearable="false"
+              :auto-apply="true"
+              :cancel-text="t('common.cancel')"
+              :select-text="t('common.save')"
+              input-class-name="datepicker-input"
+            />
           </div>
           <div class="filter-group">
             <label>{{ t('analytics.to') }}</label>
-            <input v-model="customDates.end" type="date" class="filter-select" />
+            <VueDatePicker
+              v-model="customDates.end"
+              model-type="yyyy-MM-dd"
+              :locale="datepickerLocale"
+              :enable-time-picker="false"
+              :clearable="false"
+              :auto-apply="true"
+              :cancel-text="t('common.cancel')"
+              :select-text="t('common.save')"
+              input-class-name="datepicker-input"
+            />
           </div>
         </template>
         <button class="apply-btn" @click="loadData">{{ t('analytics.apply') }}</button>
@@ -188,11 +208,16 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { analyticsAPI } from '@/services/api'
 import * as XLSX from 'xlsx'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import { enUS, ru } from 'date-fns/locale'
 
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 const loading = ref(false)
 const selectedPeriod = ref('today')
 const customDates = reactive({ start: '', end: '' })
+
+const datepickerLocale = computed(() => (locale.value === 'en' ? enUS : ru))
 
 const stats = reactive({
   overview: null, timing: null,
@@ -362,6 +387,38 @@ onMounted(() => loadData())
   color: white; font-size: 14px; outline: none; cursor: pointer;
 }
 .filter-select option { background: #1e2536; }
+.filter-group :deep(.dp__main) { width: 100%; }
+.filter-group :deep(.datepicker-input) {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+/* Theme datepicker popup for dark analytics page */
+.filter-group :deep(.dp__theme_light) {
+  --dp-background-color: #1e2536;
+  --dp-text-color: #ffffff;
+  --dp-hover-color: rgba(220, 38, 38, 0.2);
+  --dp-hover-text-color: #ffffff;
+  --dp-primary-color: #dc2626;
+  --dp-primary-text-color: #ffffff;
+  --dp-border-color: rgba(255,255,255,0.18);
+  --dp-menu-border-color: rgba(255,255,255,0.18);
+}
+
+.filter-group :deep(.dp__input_icon),
+.filter-group :deep(.dp__clear_icon) {
+  color: rgba(255,255,255,0.7);
+}
+
+.filter-group :deep(.dp__input)::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
 .apply-btn {
   padding: 10px 24px; background: var(--color-accent); color: white;
   border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap;
@@ -409,7 +466,6 @@ onMounted(() => loadData())
 .svc-fill { height: 100%; background: var(--color-accent); border-radius: 4px; transition: width 0.5s ease; }
 .svc-count { font-size: 14px; font-weight: 700; color: white; min-width: 24px; text-align: right; }
 
-.peak-card {}
 .peak-content { display: flex; align-items: center; gap: 20px; }
 .peak-time { font-size: 52px; font-weight: 700; color: var(--color-accent); }
 .peak-count { font-size: 22px; color: rgba(255,255,255,0.6); }

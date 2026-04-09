@@ -127,6 +127,7 @@ export default {
     noDepartment: 'Факультети жок',
     emailNote:    'Кызматкер сырсөз коюу үчүн кат алат',
     emailLabel:   'Корпоративдик почта',
+    duplicateEmail: 'Мындай email менен колдонуучу мурунтан эле бар',
     logoutConfirmText: 'Чындап эле тутумдан чыккыңыз келеби?',
     windowLabel:       'Терезе номери',
     windowPlaceholder: 'Мисалы: 1',
@@ -211,6 +212,10 @@ export default {
    forgotPassword: {
     title:       'Сырсөздү унуттуңузбу?',
     description: 'Корпоративдик почтаңызды киргизиңиз — сырсөздү баштапкы абалга келтирүү шилтемесин жөнөтөбүз.',
+    emailRequired: 'Email киргизиңиз',
+    emailDomainOnly: '@alatoo.edu.kg даректери гана уруксат',
+    accountNotFound: 'Мындай email менен аккаунт табылган жок',
+    accountInactive: 'Аккаунт өчүрүлгөн. Администраторго кайрылыңыз',
     submit:      'Шилтемени жөнөтүү',
     sentTitle:   'Кат жөнөтүлдү!',
     sentDesc:    'Сырсөздү баштапкы абалга келтирүү шилтемеси жөнөтүлдү: ',

@@ -303,6 +303,21 @@ function validate() {
   return ok
 }
 
+function mapModalErrorMessage(message) {
+  if (!message) return t('staff.createError')
+
+  const normalized = String(message).toLowerCase()
+  if (
+    normalized.includes('email already exists') ||
+    normalized.includes('user with this email already exists') ||
+    normalized.includes('пользователь с таким email уже существует')
+  ) {
+    return t('staffMgmt.duplicateEmail')
+  }
+
+  return message
+}
+
 async function handleSubmit() {
   if (!validate()) return
   modalLoading.value = true
@@ -327,7 +342,7 @@ async function handleSubmit() {
     await loadStaff()
     setTimeout(() => { closeModal() }, 1200)
   } catch (e) {
-    modalError.value = e.response?.data?.message || t('staff.createError')
+    modalError.value = mapModalErrorMessage(e.response?.data?.message)
   } finally { modalLoading.value = false }
 }
 

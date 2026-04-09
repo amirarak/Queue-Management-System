@@ -130,6 +130,7 @@ export default {
     noDepartment: 'Без факультета',
     emailNote:    'Сотрудник получит письмо для установки пароля',
     emailLabel:   'Корпоративная почта',
+    duplicateEmail: 'Пользователь с таким email уже существует',
     logoutConfirmText: 'Вы действительно хотите выйти из системы?',
     windowLabel:       'Номер окна',
     windowPlaceholder: 'Например: 1',
@@ -171,6 +172,10 @@ export default {
   forgotPassword: {
     title: 'Забыли пароль?',
     description: 'Введите корпоративную почту — мы отправим ссылку для сброса пароля.',
+    emailRequired: 'Введите email',
+    emailDomainOnly: 'Только @alatoo.edu.kg адреса',
+    accountNotFound: 'Аккаунт с таким email не найден',
+    accountInactive: 'Аккаунт деактивирован. Обратитесь к администратору',
     submit: 'Отправить ссылку',
     sentTitle: 'Письмо отправлено!',
     sentDesc: 'Ссылка для сброса пароля отправлена на ',

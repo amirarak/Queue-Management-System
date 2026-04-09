@@ -69,14 +69,28 @@ const loading  = ref(false)
 const errorMsg = ref('')
 const state    = ref('form') 
 
+function mapForgotPasswordError(message) {
+  const normalized = String(message || '').toLowerCase()
+
+  if (normalized.includes('аккаунт с таким email не найден') || normalized.includes('no account found')) {
+    return t('forgotPassword.accountNotFound')
+  }
+
+  if (normalized.includes('аккаунт деактивирован') || normalized.includes('deactivated')) {
+    return t('forgotPassword.accountInactive')
+  }
+
+  return message || t('common.error')
+}
+
 async function handleSubmit() {
   errorMsg.value = ''
   if (!email.value.trim()) {
-    errorMsg.value = 'Введите email'
+    errorMsg.value = t('forgotPassword.emailRequired')
     return
   }
   if (!email.value.endsWith('@alatoo.edu.kg')) {
-    errorMsg.value = 'Только @alatoo.edu.kg адреса'
+    errorMsg.value = t('forgotPassword.emailDomainOnly')
     return
   }
   loading.value = true
@@ -84,7 +98,8 @@ async function handleSubmit() {
     await authAPI.forgotPassword(email.value.trim())
     state.value = 'sent'
   } catch (e) {
-    state.value = 'sent'
+    errorMsg.value = mapForgotPasswordError(e.response?.data?.message)
+    state.value = 'form'
   } finally {
     loading.value = false
   }

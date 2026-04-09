@@ -130,6 +130,7 @@ export default {
     noDepartment: 'No Faculty',
     emailNote:    'Staff member will receive an email to set their password',
     emailLabel:   'Corporate Email',
+    duplicateEmail: 'A user with this email already exists',
     logoutConfirmText: 'Are you sure you want to sign out?',
     windowLabel:       'Window Number',
     windowPlaceholder: 'E.g.: 1',
@@ -170,6 +171,10 @@ export default {
   forgotPassword: {
     title: 'Forgot Password?',
     description: 'Enter your corporate email — we will send a password reset link.',
+    emailRequired: 'Email is required',
+    emailDomainOnly: 'Use alatoo.edu.kg email only',
+    accountNotFound: 'No account found with this email',
+    accountInactive: 'Account is deactivated. Contact administrator',
     submit: 'Send Reset Link',
     sentTitle: 'Email Sent!',
     sentDesc: 'A password reset link has been sent to ',

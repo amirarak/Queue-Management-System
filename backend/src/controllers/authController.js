@@ -143,19 +143,28 @@ exports.forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ where: { username } });
 
-    if (user && user.isActive) {
-      const resetToken = generateToken(32);
-      await user.update({ verificationToken: resetToken });
-      try {
-        await emailService.sendPasswordResetEmail(user.username, user.fullName, resetToken);
-        logger.info(`Password reset email sent to: ${username}`);
-      } catch (emailErr) {
-        logger.error('Failed to send reset email:', emailErr);
-      }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Аккаунт с таким email не найден'
+      });
     }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Аккаунт деактивирован. Обратитесь к администратору'
+      });
+    }
+
+    const resetToken = generateToken(32);
+    await user.update({ verificationToken: resetToken });
+    await emailService.sendPasswordResetEmail(user.username, user.fullName, resetToken);
+    logger.info(`Password reset email sent to: ${username}`);
+
     res.json({
       success: true,
-      message: `Если аккаунт существует, письмо отправлено на ${username}`
+      message: `Письмо для сброса пароля отправлено на ${username}`
     });
   } catch (error) { next(error); }
 };

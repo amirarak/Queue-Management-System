@@ -8,7 +8,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vuepic/vue-datepicker": "^12.1.0",
     "axios": "^1.13.5",
+    "date-fns": "^4.1.0",
     "pinia": "^2.1.0",
     "socket.io-client": "^4.8.3",
     "vue": "^3.4.0",
