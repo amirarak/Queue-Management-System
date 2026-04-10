@@ -64,7 +64,7 @@ async function handleSkip() { await queueStore.skipTicket() }
 let interval = null
 onMounted(() => {
   queueStore.initialize()
-  interval = setInterval(() => { queueStore.fetchQueue(); queueStore.fetchCurrent() }, 10000)
+  interval = setInterval(() => { queueStore.fetchQueue(); queueStore.fetchCurrent(); queueStore.fetchHistory() }, 10000)
 })
 onUnmounted(() => { if (interval) clearInterval(interval) })
 </script>

@@ -12,7 +12,7 @@ export const useQueueStore = defineStore('queue', () => {
 
   const waitingTickets = computed(() => tickets.value.filter(t => t.status === 'waiting'))
   const currentDate    = computed(() => new Date().toLocaleDateString('ru-RU'))
-  const completedCount = computed(() => tickets.value.filter(t => t.status === 'completed').length)
+  const completedCount = computed(() => calledTickets.value.filter(t => t.status === 'completed').length)
 
   function getScopedDepartmentId() {
     const authStore = useAuthStore()
@@ -43,7 +43,7 @@ export const useQueueStore = defineStore('queue', () => {
   async function fetchHistory(departmentId = undefined) {
     try {
       const scopedDepartmentId = departmentId !== undefined ? departmentId : getScopedDepartmentId()
-      const params = { limit: 5, ...(scopedDepartmentId ? { departmentId: scopedDepartmentId } : {}) }
+      const params = { limit: 200, ...(scopedDepartmentId ? { departmentId: scopedDepartmentId } : {}) }
       const res = await queueAPI.getHistory(params)
       calledTickets.value = res.data.data || []
     } catch (e) {
@@ -81,8 +81,7 @@ export const useQueueStore = defineStore('queue', () => {
       const idx = tickets.value.findIndex(t => t.id === ticket.id)
       if (idx !== -1) tickets.value[idx].status = 'serving'
 
-      calledTickets.value.unshift(ticket)
-      if (calledTickets.value.length > 5) calledTickets.value.pop()
+      await fetchHistory()
 
       return ticket
     } catch (e) {
@@ -100,6 +99,7 @@ export const useQueueStore = defineStore('queue', () => {
       const idx = tickets.value.findIndex(t => t.id === currentTicket.value.id)
       if (idx !== -1) tickets.value[idx].status = 'completed'
       currentTicket.value = null
+      await Promise.all([fetchQueue(), fetchCurrent(), fetchHistory()])
     } catch (e) {
       error.value = e.response?.data?.message || 'Ошибка завершения'
     } finally { loading.value = false }
@@ -114,6 +114,7 @@ export const useQueueStore = defineStore('queue', () => {
       const idx = tickets.value.findIndex(t => t.id === currentTicket.value.id)
       if (idx !== -1) tickets.value[idx].status = 'cancelled'
       currentTicket.value = null
+      await Promise.all([fetchQueue(), fetchCurrent(), fetchHistory()])
     } catch (e) {
       error.value = e.response?.data?.message || 'Ошибка пропуска талона'
     } finally {

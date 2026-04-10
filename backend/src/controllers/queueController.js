@@ -18,7 +18,7 @@ exports.getQueue = async (req, res, next) => {
     const tickets = await Ticket.findAll({
       where,
       include: [{ model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }],
-      order: [['ticketNumber', 'ASC']]
+      order: [['createdAt', 'ASC'], ['id', 'ASC']]
     });
     res.json({ success: true, data: { tickets, count: tickets.length } });
   } catch (error) { next(error); }
@@ -70,7 +70,7 @@ exports.callNextTicket = async (req, res, next) => {
       nextWhere.departmentId = req.user.departmentId;
     }
 
-    const nextTicket = await Ticket.findOne({ where: nextWhere, order: [['ticketNumber', 'ASC']] });
+    const nextTicket = await Ticket.findOne({ where: nextWhere, order: [['createdAt', 'ASC'], ['id', 'ASC']] });
     if (!nextTicket) {
       return res.status(404).json({ success: false, message: 'No waiting tickets in queue' });
     }

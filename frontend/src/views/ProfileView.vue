@@ -26,7 +26,7 @@
 
             <div class="stats-mini">
               <div class="stat-item">
-                <span class="stat-val">{{ userStats.days }}</span>
+                <span class="stat-val">{{ userDaysInSystem }}</span>
                 <span class="stat-lbl">{{ t('profile.daysInSystem') }}</span>
               </div>
             </div>
@@ -205,7 +205,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/authStore'
@@ -228,12 +228,9 @@ const savingPass = ref(false)
 const passSuccess = ref('')
 const passError = ref('')
 
-const userStats = reactive({ days: '—' })
-
-onMounted(() => {
-  if (authStore.user?.createdAt) {
-    userStats.days = Math.floor((Date.now() - new Date(authStore.user.createdAt)) / 86400000)
-  }
+const userDaysInSystem = computed(() => {
+  if (!authStore.user?.createdAt) return '—'
+  return Math.floor((Date.now() - new Date(authStore.user.createdAt)) / 86400000)
 })
 
 async function saveInfo() {

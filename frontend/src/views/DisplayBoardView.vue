@@ -6,7 +6,6 @@
         <div class="board-subtitle">{{ t('dept.name') }}</div>
       </div>
       <div class="header-right">
-        <LangSwitcher />
         <div class="clock-block">
           <div class="time-display">{{ formattedTime }}</div>
           <div class="date-display">{{ formattedDate }}</div>
@@ -100,11 +99,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { queueAPI } from '@/services/api'
 import { useTime } from '@/composables/useTime'
-import LangSwitcher from '@/components/common/LangSwitcher.vue'
 
 const { t, te, locale } = useI18n()
 const { formattedTime, formattedDate } = useTime()
@@ -150,8 +148,8 @@ function translatePurpose(purpose) {
 function formatTime(dateStr) {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleTimeString(
-    locale.value === 'en' ? 'en-US' : 'ru-RU',
-    { hour: '2-digit', minute: '2-digit' }
+    'en-US',
+    { hour: '2-digit', minute: '2-digit', hour12: false }
   )
 }
 
@@ -167,7 +165,11 @@ async function fetchServing() {
 async function fetchWaiting() {
   try {
     const res = await queueAPI.getQueue()
-    waitingTickets.value = res.data.data?.tickets || []
+    waitingTickets.value = (res.data.data?.tickets || []).slice().sort((a, b) => {
+      const byCreatedAt = new Date(a.createdAt) - new Date(b.createdAt)
+      if (byCreatedAt !== 0) return byCreatedAt
+      return (a.id || 0) - (b.id || 0)
+    })
   } catch (e) {
     throw new Error(e.response?.data?.message || 'Failed to load queue')
   }
@@ -197,6 +199,7 @@ async function refreshAll() {
 let interval = null
 
 onMounted(async () => {
+  locale.value = 'en'
   await refreshAll()
   interval = setInterval(refreshAll, 2000)
 })

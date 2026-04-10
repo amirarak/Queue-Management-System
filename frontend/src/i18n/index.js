@@ -3,12 +3,12 @@ import ru from '../locales/ru'
 import ky from '../locales/ky'
 import en from '../locales/en'
 
-const savedLocale = localStorage.getItem('locale') || 'ru'
+const savedLocale = localStorage.getItem('locale') || 'en'
 
 const i18n = createI18n({
   legacy: false,
   locale: savedLocale,
-  fallbackLocale: 'ru',
+  fallbackLocale: 'en',
   messages: { ru, ky, en }
 })
 

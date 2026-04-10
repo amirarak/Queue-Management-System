@@ -316,6 +316,11 @@ function buildApp() {
     if (req.user && req.user.role !== 'admin' && req.user.departmentId) {
       waiting = waiting.filter(t => t.departmentId === req.user.departmentId);
     }
+    waiting.sort((a, b) => {
+      const byCreatedAt = new Date(a.createdAt) - new Date(b.createdAt);
+      if (byCreatedAt !== 0) return byCreatedAt;
+      return a.id - b.id;
+    });
     res.json({ success: true, data: { tickets: waiting, count: waiting.length } });
   });
 
@@ -361,7 +366,11 @@ function buildApp() {
       if (new Date(t.createdAt) < start || new Date(t.createdAt) > end) return false;
       if (req.user.role !== 'admin' && req.user.departmentId) return t.departmentId === req.user.departmentId;
       return true;
-    }).sort((a, b) => a.ticketNumber - b.ticketNumber);
+    }).sort((a, b) => {
+      const byCreatedAt = new Date(a.createdAt) - new Date(b.createdAt);
+      if (byCreatedAt !== 0) return byCreatedAt;
+      return a.id - b.id;
+    });
 
     if (waiting.length === 0) return res.status(404).json({ success: false, message: 'No waiting tickets in queue' });
 
