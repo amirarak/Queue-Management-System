@@ -1,21 +1,36 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const config = require('../config');
 const logger = require('../utils/logger');
 
-const transporter = nodemailer.createTransport({
-  host: config.email.host,
-  port: config.email.port,
-  secure: false,
-  auth: {
-    user: config.email.user,
-    pass: config.email.password
-  }
-});
+let resendClient;
 
-transporter.verify((error) => {
-  if (error) logger.error('Email service error:', error);
-  else logger.info('Email service ready');
-});
+function getResendClient() {
+  if (resendClient) return resendClient;
+
+  if (!config.email.apiKey) {
+    throw new Error('RESEND_API_KEY is not set');
+  }
+
+  resendClient = new Resend(config.email.apiKey);
+  logger.info('Resend email service ready');
+  return resendClient;
+}
+
+async function sendEmail({ to, subject, html }) {
+  const resend = getResendClient();
+  const response = await resend.emails.send({
+    from: config.email.from,
+    to,
+    subject,
+    html
+  });
+
+  if (response.error) {
+    throw new Error(`Resend error: ${response.error.message}`);
+  }
+
+  return response;
+}
 
 
 exports.sendInviteEmail = async (email, fullName, token) => {
@@ -69,14 +84,13 @@ exports.sendInviteEmail = async (email, fullName, token) => {
     </html>
   `;
 
-  const info = await transporter.sendMail({
-    from: config.email.from || `"Учебная часть" <${config.email.user}>`,
+  const info = await sendEmail({
     to: email,
     subject: 'Добро пожаловать! Установите пароль для входа в систему',
     html
   });
 
-  logger.info(`Invite email sent to ${email}: ${info.messageId}`);
+  logger.info(`Invite email sent to ${email}: ${info.data?.id || 'ok'}`);
   return info;
 };
 
@@ -88,8 +102,7 @@ exports.sendPasswordResetEmail = async (email, fullName, token) => {
   const frontendUrl = config.frontendUrl || 'http://localhost:5173';
   const resetUrl = `${frontendUrl}/set-password?token=${token}`;
 
-  await transporter.sendMail({
-    from: config.email.from || `"Учебная часть" <${config.email.user}>`,
+  const info = await sendEmail({
     to: email,
     subject: 'Сброс пароля — Система очереди',
     html: `
@@ -102,4 +115,7 @@ exports.sendPasswordResetEmail = async (email, fullName, token) => {
       </div>
     `
   });
+
+  logger.info(`Password reset email sent to ${email}: ${info.data?.id || 'ok'}`);
+  return info;
 };

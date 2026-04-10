@@ -21,11 +21,9 @@ module.exports = {
   },
   
   email: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    user: process.env.SMTP_USER,
-    password: process.env.SMTP_PASSWORD,
-    from: process.env.SMTP_FROM || 'noreply@alatoo.edu.kg'
+    provider: 'resend',
+    apiKey: process.env.RESEND_API_KEY,
+    from: process.env.RESEND_FROM || 'Queue System <noreply@alatoo.edu.kg>'
   },
   
   rateLimit: {
