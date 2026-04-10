@@ -15,6 +15,9 @@ const usersRoutes = require('./routes/users');
 const app = express();
 const allowedOrigins = config.frontendUrls || [process.env.FRONTEND_URL || 'http://localhost:3000'];
 
+// Respect X-Forwarded-* headers when running behind reverse proxy (nginx/docker).
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 

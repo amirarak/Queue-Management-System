@@ -8,6 +8,7 @@ CREATE TABLE users (
   is_active BOOLEAN DEFAULT TRUE,
   is_verified BOOLEAN DEFAULT FALSE,
   verification_token VARCHAR(255),
+  window_number INTEGER,
   last_login TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -38,12 +39,16 @@ COMMENT ON COLUMN service_types.avg_service_time IS 'Среднее время �
 CREATE TABLE tickets (
   id SERIAL PRIMARY KEY,
   ticket_number INTEGER NOT NULL,
+  ticket_code VARCHAR(20),
   student_name VARCHAR(255) DEFAULT 'Студент',
+  purpose_key VARCHAR(100),
   purpose VARCHAR(255) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'waiting' 
     CHECK (status IN ('waiting', 'serving', 'completed', 'cancelled')),
+  department_id INTEGER,
   service_type_id INTEGER REFERENCES service_types(id) ON DELETE SET NULL,
   served_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  window_number INTEGER,
   qr_code TEXT,
   called_at TIMESTAMP,
   completed_at TIMESTAMP,
@@ -161,7 +166,8 @@ ON CONFLICT (code) DO NOTHING;
 
 
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS window_number INTEGER;
 
 CREATE INDEX IF NOT EXISTS idx_users_department ON users(department_id);
 
@@ -169,9 +175,29 @@ CREATE INDEX IF NOT EXISTS idx_users_department ON users(department_id);
 ALTER TABLE tickets
   ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS purpose_key   VARCHAR(100),
-  ADD COLUMN IF NOT EXISTS ticket_code   VARCHAR(20);
+  ADD COLUMN IF NOT EXISTS ticket_code   VARCHAR(20),
+  ADD COLUMN IF NOT EXISTS window_number INTEGER;
 
 CREATE INDEX IF NOT EXISTS idx_tickets_department ON tickets(department_id);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_department_id_fkey'
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT users_department_id_fkey
+      FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'tickets_department_id_fkey'
+  ) THEN
+    ALTER TABLE tickets
+      ADD CONSTRAINT tickets_department_id_fkey
+      FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 
 DROP TRIGGER IF EXISTS update_departments_updated_at ON departments;
