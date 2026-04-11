@@ -1,5 +1,11 @@
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
+
+const logsDir = path.join(__dirname, '../../logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 
 const logFormat = winston.format.combine(
@@ -42,11 +48,15 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
-
-const fs = require('fs');
-const logsDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+if (process.env.NODE_ENV !== 'development') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.printf(({ level, message, timestamp, stack }) => (
+        `${timestamp} ${level}: ${stack || message}`
+      ))
+    )
+  }));
 }
 
 module.exports = logger;
