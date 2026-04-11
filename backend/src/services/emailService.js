@@ -19,7 +19,7 @@ function getResendClient() {
 async function sendEmail({ to, subject, html }) {
   const resend = getResendClient();
   const response = await resend.emails.send({
-    from: config.email.from,
+    from: config.email.from || 'no-reply@queue-management-system.me',
     to,
     subject,
     html
@@ -95,7 +95,25 @@ exports.sendInviteEmail = async (email, fullName, token) => {
 };
 
 
-exports.sendVerificationEmail = exports.sendInviteEmail;
+exports.sendVerificationEmail = async (email, code) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto">
+      <h2 style="color:#1a2332">Подтверждение email</h2>
+      <p>Ваш код подтверждения:</p>
+      <p style="font-size:28px;font-weight:700;letter-spacing:4px;color:#dc2626">${code}</p>
+      <p style="color:#999;font-size:13px">Если вы не запрашивали код, просто проигнорируйте это письмо.</p>
+    </div>
+  `;
+
+  const info = await sendEmail({
+    to: email,
+    subject: 'Код подтверждения',
+    html
+  });
+
+  logger.info(`Verification email sent to ${email}: ${info.data?.id || 'ok'}`);
+  return info;
+};
 
 
 exports.sendPasswordResetEmail = async (email, fullName, token) => {

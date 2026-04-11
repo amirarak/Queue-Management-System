@@ -25,8 +25,8 @@ exports.authLimiter = rateLimit({
 
 
 exports.ticketLimiter = rateLimit({
-  windowMs: parseInt(process.env.TICKET_RATE_LIMIT_WINDOW_MS, 10) || 60 * 1000,
-  max: parseInt(process.env.TICKET_RATE_LIMIT_MAX, 10) || 30,
+  windowMs: 60 * 1000, 
+  max: 10, 
   message: {
     success: false,
     message: 'Too many tickets created, please slow down'

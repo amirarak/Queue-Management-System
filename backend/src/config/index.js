@@ -23,7 +23,7 @@ module.exports = {
   email: {
     provider: 'resend',
     apiKey: process.env.RESEND_API_KEY,
-    from: process.env.RESEND_FROM || 'Queue System <noreply@alatoo.edu.kg>'
+    from: process.env.RESEND_FROM || 'no-reply@queue-management-system.me'
   },
   
   rateLimit: {

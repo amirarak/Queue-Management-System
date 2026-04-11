@@ -113,6 +113,10 @@ Required fields in `.env`:
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 - `FRONTEND_URL` (set to `http://SERVER_IP`)
+- `RESEND_API_KEY`
+
+Optional:
+- `RESEND_FROM` (default: `Queue System <no-reply@queue-management-system.me>`)
 
 Note:
 - Frontend calls backend through Nginx proxy at `/api`, so browser traffic is same-origin and avoids CORS issues.
