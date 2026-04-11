@@ -148,4 +148,64 @@ const handleLogin = async () => {
   cursor: pointer; transition: color 0.2s;
 }
 .forgot-link:hover { color: #b91c1c; }
+
+@media (max-width: 768px) {
+  .login-view {
+    align-items: flex-start;
+    padding: 84px 16px 24px;
+  }
+
+  .lang-bar {
+    top: 12px;
+    right: 12px;
+  }
+
+  .login-card {
+    padding: 34px 24px;
+    border-radius: 16px;
+  }
+
+  .logo-circle {
+    width: 82px;
+    height: 82px;
+    margin-bottom: 18px;
+  }
+
+  .logo-circle svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .login-title {
+    font-size: 24px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .login-view {
+    padding: 74px 12px 16px;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .login-button {
+    padding: 13px;
+    font-size: 15px;
+  }
+}
 </style>

@@ -32,6 +32,9 @@ export const authAPI = {
   login(username, password)              { return api.post('/auth/login', { username, password }) },
   register(userData)                     { return api.post('/auth/register', userData) },
   forgotPassword(username)               { return api.post('/auth/forgot-password', { username }) },
+  resetPasswordByCode(username, code, password) {
+    return api.post('/auth/reset-password', { username, code, password })
+  },
   me()                                   { return api.get('/auth/me') },
   logout()                               { return api.post('/auth/logout') },
   changePassword(currentPassword, newPassword) {
@@ -50,7 +53,6 @@ export const ticketsAPI = {
 export const queueAPI = {
   getQueue(departmentId)    { return api.get('/queue', { params: { departmentId } }) },
   getCurrent(departmentId)  { return api.get('/queue/current', { params: { departmentId } }) },
-  // All tickets currently being served — used by display board
   getServing()              { return api.get('/queue/serving') },
   callNext(departmentId)    { return api.post('/queue/call-next', { departmentId }) },
   complete(id, notes)       { return api.put(`/queue/${id}/complete`, { notes }) },

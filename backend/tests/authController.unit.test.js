@@ -17,7 +17,8 @@ jest.mock('../src/config', () => ({
 
 jest.mock('../src/services/emailService', () => ({
   sendInviteEmail: jest.fn(),
-  sendPasswordResetEmail: jest.fn()
+  sendPasswordResetEmail: jest.fn(),
+  sendVerificationEmail: jest.fn()
 }));
 
 jest.mock('../src/utils/logger', () => ({
@@ -252,7 +253,7 @@ describe('auth controller unit tests', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  test('forgotPassword always returns 200 and triggers email for active user', async () => {
+  test('forgotPassword always returns 200 and triggers verification code email for active user', async () => {
     const user = {
       username: 'staff@alatoo.edu.kg',
       fullName: 'Staff User',
@@ -260,7 +261,7 @@ describe('auth controller unit tests', () => {
       update: jest.fn().mockResolvedValue(undefined)
     };
     User.findOne.mockResolvedValue(user);
-    emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+    emailService.sendVerificationEmail.mockResolvedValue(undefined);
 
     const req = { body: { username: 'staff@alatoo.edu.kg' } };
     const res = createRes();
@@ -268,8 +269,32 @@ describe('auth controller unit tests', () => {
 
     await authController.forgotPassword(req, res, next);
 
-    expect(user.update).toHaveBeenCalledWith({ verificationToken: expect.any(String) });
-    expect(emailService.sendPasswordResetEmail).toHaveBeenCalled();
+    expect(user.update).toHaveBeenCalledWith({ verificationToken: expect.stringMatching(/^reset:\d{6}$/) });
+    expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('resetPasswordWithCode updates password with valid code', async () => {
+    const user = {
+      username: 'staff@alatoo.edu.kg',
+      isActive: true,
+      verificationToken: 'reset:123456',
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    User.findOne.mockResolvedValue(user);
+
+    const req = { body: { username: 'staff@alatoo.edu.kg', code: '123456', password: 'StrongPass123!' } };
+    const res = createRes();
+    const next = jest.fn();
+
+    await authController.resetPasswordWithCode(req, res, next);
+
+    expect(user.update).toHaveBeenCalledWith({
+      password: 'StrongPass123!',
+      verificationToken: null,
+      isVerified: true
+    });
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     expect(next).not.toHaveBeenCalled();
   });

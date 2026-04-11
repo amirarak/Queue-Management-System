@@ -111,7 +111,6 @@
           </div>
         </div>
 
-        <!-- Пропущенные -->
         <div class="metric-card">
           <div class="metric-icon gray">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -398,7 +397,6 @@ onMounted(() => loadData())
   outline: none;
 }
 
-/* Theme datepicker popup for dark analytics page */
 .filter-group :deep(.dp__theme_light) {
   --dp-background-color: #1e2536;
   --dp-text-color: #ffffff;

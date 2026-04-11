@@ -1,44 +1,26 @@
-/* adaptive.css */
-/* Import in main.js: import './assets/styles/adaptive.css' */
-
-/* Breakpoints:
-   481px–1024px  → Kiosk tablet
-   1025px–1920px+ → Display board
-   1025px–1440px → Staff dashboard
-*/
-
-/* 1. Kiosk */
-
 @media (max-width: 1024px) {
-  /* Welcome screen */
   .kiosk-welcome-title  { font-size: clamp(28px, 5vw, 52px); }
   .kiosk-welcome-btn    { font-size: clamp(18px, 3vw, 28px); padding: clamp(18px, 3vw, 28px) clamp(40px, 6vw, 80px); }
   .kiosk-queue-count    { font-size: clamp(14px, 2vw, 18px); }
 }
 
 @media (max-width: 1024px) {
-  /* Ticket screen */
   .ticket-number        { font-size: clamp(72px, 15vw, 140px); }
   .ticket-card          { padding: clamp(24px, 4vw, 48px); border-radius: 20px; }
   .ticket-label         { font-size: clamp(14px, 2.5vw, 20px); }
 }
 
 @media (max-width: 1024px) {
-  /* Service selection */
   .service-grid         { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .service-card         { padding: clamp(16px, 2.5vw, 28px); font-size: clamp(14px, 2vw, 18px); min-height: 80px; }
 }
 
 @media (max-width: 600px) {
-  /* Small screens */
   .service-grid         { grid-template-columns: 1fr; }
   .dept-grid            { grid-template-columns: 1fr; }
 }
 
-/* 2. Display board */
-
 @media (min-width: 1280px) {
-  /* Main ticket number */
   .display-current-number {
     font-size: clamp(120px, 18vw, 240px);
     line-height: 1;
@@ -50,7 +32,6 @@
     text-transform: uppercase;
   }
 
-  /* Queue list layout */
   .display-layout {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -65,16 +46,12 @@
 }
 
 @media (min-width: 1920px) {
-  /* Large display screens */
   .display-current-number { font-size: 280px; }
   .display-current-label  { font-size: 40px; }
   .display-layout         { grid-template-columns: 1fr 420px; padding: 48px; }
 }
 
-/* 3. Staff dashboard */
-
 @media (min-width: 1025px) {
-  /* Sidebar and content */
   .app-layout {
     display: grid;
     grid-template-columns: 220px 1fr;
@@ -96,38 +73,29 @@
 }
 
 @media (min-width: 1025px) and (max-width: 1280px) {
-  /* Narrow laptops */
   .app-layout              { grid-template-columns: 190px 1fr; }
   .stats-grid              { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1440px) {
-  /* Wide desktops */
   .app-layout              { grid-template-columns: 240px 1fr; }
   .stats-grid              { grid-template-columns: repeat(4, 1fr); }
   .staff-dashboard-layout  { grid-template-columns: 1fr 360px; gap: 28px; }
 }
 
-/* 4. Analytics */
-
 @media (max-width: 1100px) {
-  /* Medium screens */
   .analytics-stats-grid { grid-template-columns: repeat(2, 1fr); }
   .analytics-charts     { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
-  /* Small screens */
   .analytics-stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .analytics-table      { font-size: 13px; }
   .analytics-table th,
   .analytics-table td   { padding: 8px 10px; }
 }
 
-/* 5. Auth forms */
-
 @media (max-width: 480px) {
-  /* Mobile form cards */
   .login-card,
   .forgot-card,
   .profile-card {
@@ -136,30 +104,109 @@
   }
 }
 
-/* 6. Staff management */
+@media (max-width: 768px) {
+  .profile-page,
+  .analytics-page,
+  .staff-dashboard,
+  .management-page {
+    padding: 16px 10px;
+  }
 
-@media (max-width: 900px) {
-  /* Responsive table */
-  .staff-table thead       { display: none; }
-  .staff-table tr          { display: block; margin-bottom: 16px; border-radius: 10px; overflow: hidden; }
-  .staff-table td          { display: flex; justify-content: space-between; padding: 10px 14px; font-size: 13px; }
-  .staff-table td::before  { content: attr(data-label); font-weight: 600; color: #888; }
+  .page-container,
+  .dashboard-container {
+    gap: 16px;
+  }
+
+  .page-header,
+  .dashboard-header {
+    padding: 16px;
+    border-radius: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-title,
+  .dashboard-title {
+    font-size: 22px;
+  }
+
+  .profile-grid,
+  .dashboard-content,
+  .charts-grid,
+  .analytics-grid,
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+
+  .table-card,
+  .chart-card,
+  .list-card,
+  .history-card,
+  .queue-card {
+    overflow-x: auto;
+  }
+
+  .analytics-table,
+  .staff-table {
+    min-width: 760px;
+  }
+
+  .board-header,
+  .board-content {
+    padding: 14px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal {
+    max-width: 100%;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
 }
 
-/* 7. Utilities */
+@media (max-width: 420px) {
+  .page-title,
+  .dashboard-title {
+    font-size: 20px;
+  }
 
-/* Hide on mobile */
+  .form-input,
+  .filter-select,
+  .datepicker-input {
+    font-size: 14px;
+    padding: 11px 12px;
+  }
+
+  .btn-primary,
+  .add-btn,
+  .export-btn,
+  .apply-btn,
+  .call-button,
+  .btn-submit,
+  .btn-delete,
+  .btn-cancel {
+    width: 100%;
+    font-size: 14px;
+    padding: 12px;
+  }
+}
+
 .hide-mobile  { display: none !important; }
 @media (min-width: 768px) {
   .hide-mobile { display: revert !important; }
 }
 
-/* Hide on desktop */
 @media (min-width: 1025px) {
   .hide-desktop { display: none !important; }
 }
 
-/* Touch-friendly elements */
 @media (max-width: 1024px) and (pointer: coarse) {
   button, a, [role="button"] {
     min-height: 44px;
@@ -167,7 +214,6 @@
   }
 }
 
-/* Disable hover on touch devices */
 @media (hover: none) {
   .dept-card:hover::before   { background: none; }
   .nav-item:hover            { background: none; }

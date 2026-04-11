@@ -9,6 +9,7 @@ const {
 	loginSchema,
 	setPasswordSchema,
 	forgotPasswordSchema,
+	resetPasswordByCodeSchema,
 	changePasswordSchema
 } = require('../middlewares/validation');
 
@@ -17,6 +18,7 @@ router.post('/register',         authLimiter, validate(registerSchema), authCont
 router.post('/login',            authLimiter, validate(loginSchema), authController.login);
 router.post('/set-password',     authLimiter, validate(setPasswordSchema), authController.setPassword);
 router.post('/forgot-password',  authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
+router.post('/reset-password',   authLimiter, validate(resetPasswordByCodeSchema), authController.resetPasswordWithCode);
 router.get('/verify/:token',     authController.verifyEmail);
 
 

@@ -13,7 +13,7 @@
           </svg>
         </div>
 
-        <template v-if="state === 'form'">
+        <template v-if="state === 'request'">
           <h1 class="card-title">{{ t('forgotPassword.title') }}</h1>
           <p class="card-sub">{{ t('forgotPassword.description') }}</p>
 
@@ -24,12 +24,12 @@
               type="email"
               class="form-input"
               placeholder="username@alatoo.edu.kg"
-              @keyup.enter="handleSubmit"
+              @keyup.enter="handleRequestCode"
             />
             <span v-if="errorMsg" class="err">{{ errorMsg }}</span>
           </div>
 
-          <button class="submit-btn" :disabled="loading" @click="handleSubmit">
+          <button class="submit-btn" :disabled="loading" @click="handleRequestCode">
             {{ loading ? t('common.loading') : t('forgotPassword.submit') }}
           </button>
 
@@ -38,14 +38,55 @@
           </router-link>
         </template>
 
-        <template v-else-if="state === 'sent'">
+        <template v-else-if="state === 'verify'">
+          <h1 class="card-title">{{ t('forgotPassword.verifyTitle') }}</h1>
+          <p class="card-sub">{{ t('forgotPassword.verifyDesc') }}<br><strong>{{ email }}</strong></p>
+
+          <div class="form-group">
+            <label>{{ t('forgotPassword.codeLabel') }}</label>
+            <input
+              v-model="code"
+              type="text"
+              maxlength="6"
+              class="form-input"
+              placeholder="123456"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>{{ t('forgotPassword.newPasswordLabel') }}</label>
+            <input
+              v-model="newPassword"
+              type="password"
+              class="form-input"
+              :placeholder="t('forgotPassword.newPasswordPlaceholder')"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>{{ t('forgotPassword.confirmPasswordLabel') }}</label>
+            <input
+              v-model="confirmPassword"
+              type="password"
+              class="form-input"
+              :placeholder="t('forgotPassword.confirmPasswordPlaceholder')"
+            />
+            <span v-if="errorMsg" class="err">{{ errorMsg }}</span>
+          </div>
+
+          <button class="submit-btn" :disabled="loading" @click="handleResetPassword">
+            {{ loading ? t('common.loading') : t('forgotPassword.resetSubmit') }}
+          </button>
+
+          <button class="back-link plain-btn" :disabled="loading" @click="resendCode">
+            {{ t('forgotPassword.resendCode') }}
+          </button>
+        </template>
+
+        <template v-else-if="state === 'success'">
           <div class="success-icon">✓</div>
-          <h1 class="card-title">{{ t('forgotPassword.sentTitle') }}</h1>
-          <p class="card-sub">
-            {{ t('forgotPassword.sentDesc') }}<br>
-            <strong>{{ email }}</strong>
-          </p>
-          <p class="card-note">{{ t('forgotPassword.sentNote') }}</p>
+          <h1 class="card-title">{{ t('forgotPassword.successTitle') }}</h1>
+          <p class="card-sub">{{ t('forgotPassword.successDesc') }}</p>
           <router-link to="/login" class="submit-btn" style="text-decoration:none;display:block;text-align:center">
             {{ t('forgotPassword.backToLogin') }}
           </router-link>
@@ -67,7 +108,10 @@ const { t } = useI18n()
 const email    = ref('')
 const loading  = ref(false)
 const errorMsg = ref('')
-const state    = ref('form') 
+const state    = ref('request')
+const code = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
 
 function mapForgotPasswordError(message) {
   const normalized = String(message || '').toLowerCase()
@@ -80,26 +124,72 @@ function mapForgotPasswordError(message) {
     return t('forgotPassword.accountInactive')
   }
 
+  if (normalized.includes('неверный код') || normalized.includes('invalid code')) {
+    return t('forgotPassword.invalidCode')
+  }
+
   return message || t('common.error')
 }
 
-async function handleSubmit() {
+function validateCorporateEmail() {
   errorMsg.value = ''
   if (!email.value.trim()) {
     errorMsg.value = t('forgotPassword.emailRequired')
-    return
+    return false
   }
   if (!email.value.endsWith('@alatoo.edu.kg')) {
     errorMsg.value = t('forgotPassword.emailDomainOnly')
-    return
+    return false
   }
+  return true
+}
+
+async function handleRequestCode() {
+  if (!validateCorporateEmail()) return
+
   loading.value = true
   try {
     await authAPI.forgotPassword(email.value.trim())
-    state.value = 'sent'
+    state.value = 'verify'
   } catch (e) {
     errorMsg.value = mapForgotPasswordError(e.response?.data?.message)
-    state.value = 'form'
+    state.value = 'request'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function resendCode() {
+  await handleRequestCode()
+}
+
+async function handleResetPassword() {
+  errorMsg.value = ''
+
+  if (!/^\d{6}$/.test(code.value.trim())) {
+    errorMsg.value = t('forgotPassword.invalidCode')
+    return
+  }
+  if (!newPassword.value || newPassword.value.length < 8) {
+    errorMsg.value = t('forgotPassword.passwordTooShort')
+    return
+  }
+  if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword.value)) {
+    errorMsg.value = t('forgotPassword.passwordPolicy')
+    return
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    errorMsg.value = t('forgotPassword.passwordsNoMatch')
+    return
+  }
+
+  loading.value = true
+  try {
+    await authAPI.resetPasswordByCode(email.value.trim(), code.value.trim(), newPassword.value)
+    state.value = 'success'
+  } catch (e) {
+    errorMsg.value = mapForgotPasswordError(e.response?.data?.message)
+    state.value = 'verify'
   } finally {
     loading.value = false
   }
@@ -162,4 +252,67 @@ async function handleSubmit() {
   text-decoration: none; transition: color 0.2s;
 }
 .back-link:hover { color: #1a2332; }
+.plain-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .forgot-view {
+    align-items: flex-start;
+    padding: 84px 16px 24px;
+  }
+
+  .lang-bar {
+    top: 12px;
+    right: 12px;
+  }
+
+  .forgot-card {
+    padding: 32px 22px;
+    border-radius: 16px;
+  }
+
+  .card-icon,
+  .success-icon {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 18px;
+  }
+
+  .card-title {
+    font-size: 21px;
+  }
+
+  .card-sub {
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .forgot-view {
+    padding: 74px 12px 16px;
+  }
+
+  .forgot-card {
+    padding: 24px 16px;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .submit-btn {
+    padding: 13px;
+    font-size: 15px;
+  }
+
+  .back-link {
+    font-size: 13px;
+  }
+}
 </style>

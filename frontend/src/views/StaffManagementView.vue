@@ -41,7 +41,6 @@
                 </div>
               </td>
               <td class="email-cell">{{ member.username }}</td>
-              <!-- Faculty name translated via i18n key -->
               <td class="dept-cell">{{ getDeptName(member) }}</td>
               <td class="window-cell">
                 <span v-if="member.windowNumber" class="window-pill">{{ member.windowNumber }}</span>
@@ -449,4 +448,83 @@ onMounted(() => { loadStaff(); loadDepartments() })
 .btn-cancel { padding: 10px 20px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: none; border-radius: 8px; cursor: pointer; font-size: 15px; }
 .btn-submit, .btn-delete { padding: 10px 24px; background: var(--color-accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
 .btn-submit:disabled, .btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 1024px) {
+  .management-page {
+    padding: 24px 16px;
+  }
+
+  .page-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  .staff-table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 768px) {
+  .management-page {
+    padding: 16px 10px;
+  }
+
+  .page-container {
+    gap: 16px;
+  }
+
+  .page-header {
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .add-btn {
+    width: 100%;
+    padding: 12px 14px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel,
+  .btn-submit,
+  .btn-delete {
+    width: 100%;
+  }
+}
 </style>

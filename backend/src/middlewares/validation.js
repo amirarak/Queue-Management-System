@@ -79,6 +79,20 @@ exports.forgotPasswordSchema = Joi.object({
     .messages({ 'string.pattern.base': 'Only @alatoo.edu.kg emails are allowed' })
 });
 
+exports.resetPasswordByCodeSchema = Joi.object({
+  username: Joi.string()
+    .email()
+    .pattern(/@alatoo\.edu\.kg$/)
+    .required()
+    .messages({ 'string.pattern.base': 'Only @alatoo.edu.kg emails are allowed' }),
+  code: Joi.string().pattern(/^\d{6}$/).required(),
+  password: Joi.string()
+    .min(8)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .required()
+    .messages({ 'string.pattern.base': 'Password must contain uppercase, lowercase, and a number' })
+});
+
 exports.createTicketSchema = Joi.object({
   studentName:   Joi.string().max(255).optional(),
   purposeKey:    Joi.string().min(3).max(100).optional(), 

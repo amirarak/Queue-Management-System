@@ -11,6 +11,31 @@ function generateToken(length = 32) {
   return result;
 }
 
+function generateTemporaryPassword(length = 10) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const digits = '23456789';
+  const all = upper + lower + digits;
+
+  let password =
+    upper.charAt(Math.floor(Math.random() * upper.length)) +
+    lower.charAt(Math.floor(Math.random() * lower.length)) +
+    digits.charAt(Math.floor(Math.random() * digits.length));
+
+  for (let i = password.length; i < length; i++) {
+    password += all.charAt(Math.floor(Math.random() * all.length));
+  }
+
+  return password
+    .split('')
+    .sort(() => Math.random() - 0.5)
+    .join('');
+}
+
+function generateVerificationCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 exports.register = async (req, res, next) => {
   try {
     const { username, password, fullName, role, departmentId, windowNumber } = req.body;
@@ -20,23 +45,23 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Пользователь с таким email уже существует' });
     }
 
-    const inviteToken = generateToken(32);
+    const initialPassword = password || generateTemporaryPassword(10);
 
     const user = await User.create({
       username,
-      password: password || generateToken(16),
+      password: initialPassword,
       fullName,
       role: role || 'staff',
       departmentId: departmentId || null,
       windowNumber: windowNumber || null,
-      isVerified: false,
+      isVerified: true,
       isActive: true,
-      verificationToken: inviteToken
+      verificationToken: null
     });
 
     let inviteEmailSent = true;
     try {
-      await emailService.sendInviteEmail(username, fullName, inviteToken);
+      await emailService.sendInviteEmail(username, fullName, initialPassword);
       logger.info(`Invite email sent to ${username}`);
     } catch (emailErr) {
       inviteEmailSent = false;
@@ -48,8 +73,8 @@ exports.register = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: inviteEmailSent
-        ? `Сотрудник создан. Письмо отправлено на ${username}`
-        : `Сотрудник создан, но отправка письма не удалась. Проверьте SMTP настройки.`,
+        ? `Сотрудник создан. Временный пароль отправлен на ${username}`
+        : `Сотрудник создан, но отправка письма не удалась. Проверьте настройки email.`,
       data: {
         id: user.id,
         username: user.username,
@@ -157,14 +182,53 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
-    const resetToken = generateToken(32);
-    await user.update({ verificationToken: resetToken });
-    await emailService.sendPasswordResetEmail(user.username, user.fullName, resetToken);
-    logger.info(`Password reset email sent to: ${username}`);
+    const verificationCode = generateVerificationCode();
+    await user.update({ verificationToken: `reset:${verificationCode}` });
+    await emailService.sendVerificationEmail(user.username, verificationCode);
+    logger.info(`Password reset code sent to: ${username}`);
 
     res.json({
       success: true,
-      message: `Письмо для сброса пароля отправлено на ${username}`
+      message: `Код подтверждения отправлен на ${username}`
     });
   } catch (error) { next(error); }
+};
+
+exports.resetPasswordWithCode = async (req, res, next) => {
+  try {
+    const { username, code, password } = req.body;
+
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Аккаунт с таким email не найден'
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Аккаунт деактивирован. Обратитесь к администратору'
+      });
+    }
+
+    if (user.verificationToken !== `reset:${code}`) {
+      return res.status(400).json({
+        success: false,
+        message: 'Неверный код подтверждения'
+      });
+    }
+
+    await user.update({
+      password,
+      verificationToken: null,
+      isVerified: true
+    });
+
+    logger.info(`Password reset completed for: ${username}`);
+    res.json({ success: true, message: 'Пароль успешно изменён' });
+  } catch (error) {
+    next(error);
+  }
 };

@@ -42,7 +42,6 @@ exports.getCurrentTicket = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-// All tickets currently being served across ALL departments — used by display board
 exports.getServingTickets = async (req, res, next) => {
   try {
     const tickets = await Ticket.findAll({
@@ -145,7 +144,6 @@ exports.skipTicket = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-// History — includes windowNumber for display board "→ Window N"
 exports.getCalledHistory = async (req, res, next) => {
   try {
     const { limit = 8 } = req.query;
