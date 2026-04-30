@@ -13,7 +13,7 @@
     </div>
 
     <img src="@/assets/images/uni.logo.png" alt="University Logo" class="university-logo" />
-    <h2 class="welcome-title">{{ t('kiosk.welcome') }}</h2>
+    <h2 class="welcome-title">TEST DEPLOY - KIOSK</h2>
     <p class="welcome-text">{{ t('kiosk.instruction') }}</p>
     <button class="start-button" @click="$emit('start')">
       {{ t('kiosk.start') }}
