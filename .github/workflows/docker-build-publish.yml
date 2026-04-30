@@ -51,8 +51,11 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd /root/Queue-Management-System
+            # update local repo to the latest pushed files
+            git fetch --all
+            git reset --hard origin/master
             docker pull ghcr.io/${{ github.repository_owner }}/queue-backend:latest
             docker pull ghcr.io/${{ github.repository_owner }}/queue-frontend:latest
             docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose up -d --remove-orphans --force-recreate
             docker compose ps
