@@ -112,7 +112,7 @@ Required fields in `.env`:
 - `POSTGRES_PASSWORD`
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
-- `FRONTEND_URL` (set to `http://SERVER_IP`)
+- `FRONTEND_URL` (set to the public browser URL, for example `http://SERVER_IP`)
 - `RESEND_API_KEY`
 
 Optional:
@@ -120,6 +120,7 @@ Optional:
 
 Note:
 - Frontend calls backend through Nginx proxy at `/api`, so browser traffic is same-origin and avoids CORS issues.
+- The deploy workflow exports `FRONTEND_URL` on the production host so CORS stays aligned with the public URL.
 - PostgreSQL init scripts run only on first startup of a new DB volume.
 
 ### 2. Build and start

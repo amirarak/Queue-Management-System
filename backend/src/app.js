@@ -26,6 +26,24 @@ function normalizeOrigin(value) {
   }
 }
 
+function isAllowedOrigin(origin, req) {
+  if (!origin) return true;
+
+  try {
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return true;
+    }
+
+    const originUrl = new URL(normalizedOrigin);
+    const requestHost = req?.headers?.host ? new URL(`http://${req.headers.host}`).hostname : null;
+
+    return Boolean(requestHost && originUrl.hostname === requestHost);
+  } catch {
+    return false;
+  }
+}
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   ...(config.frontendUrls || []),
@@ -38,20 +56,21 @@ const allowedOrigins = [
   .map(normalizeOrigin)
   .filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    const normalizedOrigin = normalizeOrigin(origin);
+app.use((req, res, next) => {
+  cors({
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin, req)) {
+        callback(null, true);
+        return;
+      }
 
-    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
-      callback(null, true);
-    } else {
       callback(new Error('CORS not allowed'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })(req, res, next);
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

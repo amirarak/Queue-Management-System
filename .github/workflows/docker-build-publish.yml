@@ -51,6 +51,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd /root/Queue-Management-System
+            export FRONTEND_URL="http://${{ secrets.DEPLOY_HOST }}"
             # update local repo to the latest pushed files
             git fetch --all
             git reset --hard origin/master

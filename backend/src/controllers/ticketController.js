@@ -53,8 +53,12 @@ exports.createTicket = async (req, res, next) => {
       nameKy: department.nameKy
     };
 
-    broadcastEvent('ticket:created', { ticket, departmentId });
-    logger.info(`Ticket created: ${ticketCode}`);
+    try {
+      broadcastEvent('ticket:created', { ticket: ticketData, departmentId });
+      logger.info(`Ticket created: ${ticketCode}`);
+    } catch (e) {
+      logger.warn('Failed to broadcast ticket:created event', { error: e?.message || e });
+    }
 
     res.status(201).json({ success: true, message: 'Ticket created successfully', data: ticketData });
   } catch (error) { next(error); }

@@ -78,19 +78,20 @@ exports.broadcastEvent = (event, data) => {
     logger.warn('WebSocket not initialized, cannot broadcast event');
     return;
   }
-  
+
   const { departmentId } = data;
-  
-  if (departmentId) {
-  
-    io.to(`department:${departmentId}`).emit(event, data);
-    logger.debug(`Event ${event} broadcasted to department:${departmentId}`);
+
+  try {
+    if (departmentId) {
+      io.to(`department:${departmentId}`).emit(event, data);
+      logger.debug(`Event ${event} broadcasted to department:${departmentId}`);
+    }
+
+    io.to('all-departments').emit(event, data);
+    logger.debug(`Event ${event} broadcasted to all-departments`);
+  } catch (err) {
+    logger.warn('Failed to emit websocket event', { event, error: err?.message || err });
   }
-  
- 
-  io.to('all-departments').emit(event, data);
-  
-  logger.debug(`Event ${event} broadcasted to all-departments`);
 };
 
 
