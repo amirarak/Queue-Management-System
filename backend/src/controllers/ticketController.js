@@ -44,14 +44,19 @@ exports.createTicket = async (req, res, next) => {
       status: 'waiting'
     });
 
-    await ticket.reload({
-      include: [{ model: Department, as: 'department', attributes: ['id','code','nameRu','nameEn','nameKy'], required: false }]
-    });
+    const ticketData = ticket.toJSON();
+    ticketData.department = {
+      id: department.id,
+      code: department.code,
+      nameRu: department.nameRu,
+      nameEn: department.nameEn,
+      nameKy: department.nameKy
+    };
 
     broadcastEvent('ticket:created', { ticket, departmentId });
     logger.info(`Ticket created: ${ticketCode}`);
 
-    res.status(201).json({ success: true, message: 'Ticket created successfully', data: ticket });
+    res.status(201).json({ success: true, message: 'Ticket created successfully', data: ticketData });
   } catch (error) { next(error); }
 };
 
