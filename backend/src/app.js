@@ -7,6 +7,7 @@ const errorHandler = require('./middlewares/errorHandler');
 
 const authRoutes = require('./routes/auth');
 const ticketRoutes = require('./routes/tickets');
+const printRoutes = require('./routes/print');
 const queueRoutes = require('./routes/queue');
 const analyticsRoutes = require('./routes/analytics');
 const usersRoutes = require('./routes/users');
@@ -16,7 +17,21 @@ const app = express();
 app.use(helmet());
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1',
+      'http://localhost'
+    ].filter(Boolean);
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -46,6 +61,7 @@ const API_PREFIX = process.env.API_PREFIX || '/api';
 
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/tickets`, ticketRoutes);
+app.use(`${API_PREFIX}/print`, printRoutes);
 app.use(`${API_PREFIX}/queue`, queueRoutes);
 app.use(`${API_PREFIX}/analytics`, analyticsRoutes);
 app.use(`${API_PREFIX}/users`, usersRoutes);

@@ -19,7 +19,9 @@ export default {
     back: 'Артка',
     yes: 'Ооба, чыгуу',
     no: 'Жокко чыгаруу',
-    tryAgain: 'Кайра аракет кылуу'
+    tryAgain: 'Кайра аракет кылуу',
+    print: 'Басып чыгаруу',
+    printing: 'Басып чыгарылууда...'
   },
 
   logout: {
@@ -68,6 +70,7 @@ export default {
   },
 
   ticket: {
+    ticket: 'Талон',
     yourNumber: 'Сиздин номериңиз',
     waiting: 'Чакырууну күтүңүз',
     minutes: 'мин'

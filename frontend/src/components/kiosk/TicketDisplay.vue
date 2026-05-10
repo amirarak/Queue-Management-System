@@ -1,5 +1,7 @@
 <template>
   <div class="ticket-display">
+    <TicketPrinter ref="printer" :ticket="ticket" />
+
     <div class="ticket-card">
 
       <div class="ticket-number-circle">
@@ -28,6 +30,16 @@
         <p class="notice-text">{{ t('ticket.waiting') }}</p>
       </div>
 
+      <div class="action-buttons">
+        <button class="print-button" :disabled="isPrinting" @click="handlePrint">
+          {{ isPrinting ? t('common.printing') : t('common.print') }}
+        </button>
+      </div>
+
+      <div v-if="printError" class="alert-error print-error">
+        {{ printError }}
+      </div>
+
       <div class="countdown">
         <div class="countdown-bar">
           <div class="countdown-fill" :style="{ width: (countdown / 10 * 100) + '%' }"></div>
@@ -42,11 +54,16 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import TicketPrinter from './TicketPrinter.vue'
 
 const { t, te, locale } = useI18n()
 
 const props = defineProps({ ticket: { type: Object, required: true } })
 const emit  = defineEmits(['done'])
+
+const printer = ref(null)
+const isPrinting = ref(false)
+const printError = ref('')
 
 const ticketPrefix = computed(() => {
   const code = props.ticket.ticketCode
@@ -74,6 +91,25 @@ function getDeptName(dept) {
   if (locale.value === 'en') return dept.nameEn
   if (locale.value === 'ky') return dept.nameKy
   return dept.nameRu
+}
+
+async function handlePrint() {
+  printError.value = ''
+  isPrinting.value = true
+
+  try {
+    if (!printer.value) {
+      throw new Error('Принтер недоступен')
+    }
+
+    await printer.value.print()
+  } catch (error) {
+    printError.value = error instanceof Error
+      ? error.message
+      : 'Не удалось открыть печать'
+  } finally {
+    isPrinting.value = false
+  }
 }
 
 const countdown = ref(10)
@@ -207,6 +243,48 @@ onUnmounted(() => {
   font-size: 13px;
   color: #999;
   margin: 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.print-button {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: clamp(14px, 2vw, 18px) clamp(24px, 3vw, 32px);
+  font-size: clamp(15px, 2vw, 18px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.print-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+.print-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.3);
+}
+
+.print-button:disabled {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+.print-error {
+  margin-top: 0;
+  text-align: left;
 }
 
 @keyframes fadeIn  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }

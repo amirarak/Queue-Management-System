@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001/api'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -73,6 +73,10 @@ export const adminAPI = {
   getStaff()            { return api.get('/users') },
   updateStaff(id, data) { return api.put(`/users/${id}`, data) },
   deleteStaff(id)       { return api.delete(`/users/${id}`) }
+}
+
+export const printAPI = {
+  printTicket(ticketData) { return api.post('/print/ticket', ticketData) }
 }
 
 export default api

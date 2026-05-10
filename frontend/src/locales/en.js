@@ -20,7 +20,9 @@ export default {
     back: 'Back',
     yes: 'Yes',
     no: 'No',
-    tryAgain: 'Try again'
+    tryAgain: 'Try again',
+    print: 'Print',
+    printing: 'Printing...'
   },
 
   logout: {
@@ -73,6 +75,7 @@ export default {
   },
 
   ticket: {
+    ticket: 'Ticket',
     yourNumber: 'Your Number',
     waiting: 'Please wait to be called',
     minutes: 'min'

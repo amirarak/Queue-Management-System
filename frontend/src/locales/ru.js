@@ -20,7 +20,9 @@ export default {
     back: 'Назад',
     yes: 'Да',
     no: 'Нет',
-    tryAgain: 'Повторить'
+    tryAgain: 'Повторить',
+    print: 'Печать',
+    printing: 'Печать...'
   },
 
   logout: {
@@ -73,6 +75,7 @@ export default {
   },
 
   ticket: {
+    ticket: 'Талон',
     yourNumber: 'Ваш номер',
     waiting: 'Ожидайте вызова',
     minutes: 'мин'

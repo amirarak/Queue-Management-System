@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import KioskView            from '../views/KioskView.vue'
 import DisplayBoardView     from '../views/DisplayBoardView.vue'
@@ -28,7 +28,7 @@ const routes = [
   { path: '/:pathMatch(.*)*', redirect: '/kiosk' },
 ]
 
-const router = createRouter({ history: createWebHistory(), routes })
+const router = createRouter({ history: createWebHashHistory(), routes })
 
 router.beforeEach(async (to, from, next) => {
   document.title = `${to.meta.title || 'Электронная очередь'} | Ala-Too`
