@@ -16,17 +16,33 @@ const app = express();
 
 app.use(helmet());
 
+function normalizeOrigin(value) {
+  if (!value) return null;
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return String(value).trim().replace(/\/$/, '');
+  }
+}
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  ...(config.frontendUrls || []),
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1',
+  'http://localhost'
+]
+  .filter(Boolean)
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
 app.use(cors({
   origin: (origin, callback) => {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1',
-      'http://localhost'
-    ].filter(Boolean);
-    
-    if (!origin || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS not allowed'));
