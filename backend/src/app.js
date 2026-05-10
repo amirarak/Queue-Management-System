@@ -16,6 +16,14 @@ const app = express();
 
 app.use(helmet());
 
+// When running behind a reverse proxy (nginx, load balancer, etc.) enable
+// trust proxy so express and middleware (like express-rate-limit) correctly
+// interpret the X-Forwarded-* headers. You can override by setting
+// PROXY_TRUST env var to a falsy value if needed.
+if (process.env.PROXY_TRUST !== 'false') {
+  app.set('trust proxy', true);
+}
+
 function normalizeOrigin(value) {
   if (!value) return null;
 
