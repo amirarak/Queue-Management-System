@@ -1,11 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
 $skipBrowser = $false
+$skipServices = $false
 $frontendUrl = 'http://127.0.0.1:3000/index.html#/kiosk'
 
 foreach ($arg in $args) {
   switch ($arg) {
     '-SkipBrowser' { $skipBrowser = $true }
+    '-SkipServices' { $skipServices = $true }
     default {
       if ($arg -like 'http://*' -or $arg -like 'https://*') {
         $frontendUrl = $arg
@@ -43,14 +45,16 @@ function Stop-PortProcess([int]$Port) {
   }
 }
 
-if (-not (Test-PortListening 3001) -or -not (Test-HttpServing 'http://127.0.0.1:3001/api/users/departments')) {
-  Stop-PortProcess 3001
-  Start-Process powershell.exe -ArgumentList @('-NoExit', '-Command', $backendCmd) | Out-Null
-}
+if (-not $skipServices) {
+  if (-not (Test-PortListening 3001) -or -not (Test-HttpServing 'http://127.0.0.1:3001/api/users/departments')) {
+    Stop-PortProcess 3001
+    Start-Process powershell.exe -ArgumentList @('-NoExit', '-Command', $backendCmd) | Out-Null
+  }
 
-if (-not (Test-PortListening 3000) -or -not (Test-HttpServing 'http://127.0.0.1:3000/')) {
-  Stop-PortProcess 3000
-  Start-Process powershell.exe -ArgumentList @('-NoExit', '-Command', $frontendCmd) | Out-Null
+  if (-not (Test-PortListening 3000) -or -not (Test-HttpServing 'http://127.0.0.1:3000/')) {
+    Stop-PortProcess 3000
+    Start-Process powershell.exe -ArgumentList @('-NoExit', '-Command', $frontendCmd) | Out-Null
+  }
 }
 
 if (-not $skipBrowser) {

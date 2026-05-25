@@ -97,9 +97,11 @@ exports.createTicketSchema = Joi.object({
   studentName:   Joi.string().max(255).optional(),
   purposeKey:    Joi.string().min(3).max(100).optional(), 
   purpose:       Joi.string().min(3).max(255).optional(), 
-  departmentId:  Joi.number().integer().positive().required(),
+  departmentId:  Joi.number().integer().positive().optional(),
+  departmentCode:Joi.string().trim().max(10).optional(),
   serviceTypeId: Joi.number().integer().positive().allow(null).optional()
-}).or('purposeKey', 'purpose') 
+}).or('purposeKey', 'purpose')
+  .or('departmentId', 'departmentCode')
 
 exports.changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),

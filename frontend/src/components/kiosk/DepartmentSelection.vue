@@ -41,6 +41,14 @@ import api from '@/services/api'
 const { locale } = useI18n()
 defineEmits(['select', 'back'])
 
+const fallbackDepartments = [
+  { code: 'ENG', nameRu: 'Факультет инженерии и информатики', nameEn: 'Faculty of Engineering and Informatics', nameKy: 'Инженерия жана информатика факультети' },
+  { code: 'ECO', nameRu: 'Факультет экономики и управления', nameEn: 'Faculty of Economics and Management', nameKy: 'Экономика жана башкаруу факультети' },
+  { code: 'SOC', nameRu: 'Факультет социальных наук', nameEn: 'Faculty of Social Sciences', nameKy: 'Социалдык илимдер факультети' },
+  { code: 'MED', nameRu: 'Медицинский факультет', nameEn: 'Faculty of Medicine', nameKy: 'Медицина факультети' },
+  { code: 'HUM', nameRu: 'Факультет гуманитарных наук', nameEn: 'Faculty of Humanities', nameKy: 'Гуманитардык илимдер факультети' }
+]
+
 const departments = ref([])
 const loading     = ref(true)
 const error       = ref('')
@@ -56,9 +64,20 @@ async function loadDepartments() {
   error.value = ''
   try {
     const res = await api.get('/users/departments')
-    departments.value = res.data.data
+    const data = Array.isArray(res.data?.data) ? res.data.data : []
+
+    if (data.length > 0) {
+      departments.value = data
+      return
+    }
+
+    departments.value = fallbackDepartments
   } catch (e) {
-    error.value = e.response?.data?.message || 'Failed to load departments'
+    departments.value = fallbackDepartments
+
+    if (!departments.value.length) {
+      error.value = e.response?.data?.message || 'Failed to load departments'
+    }
   } finally {
     loading.value = false
   }

@@ -7,18 +7,22 @@ const { getPaginationParams, paginatedResponse, getDayBounds } = require('../uti
 
 exports.createTicket = async (req, res, next) => {
   try {
-    const { studentName, purposeKey, purpose, serviceTypeId, departmentId } = req.body;
+    const { studentName, purposeKey, purpose, serviceTypeId, departmentId, departmentCode } = req.body;
 
     const finalPurposeKey = purposeKey || purpose;
+    const resolvedDepartmentId = departmentId || null;
 
     if (!finalPurposeKey) {
       return res.status(400).json({ success: false, message: 'purposeKey is required' });
     }
-    if (!departmentId) {
+    if (!resolvedDepartmentId && !departmentCode) {
       return res.status(400).json({ success: false, message: 'departmentId is required' });
     }
 
-    const department = await Department.findByPk(departmentId);
+    const department = resolvedDepartmentId
+      ? await Department.findByPk(resolvedDepartmentId)
+      : await Department.findOne({ where: { code: departmentCode } });
+
     if (!department) {
       return res.status(404).json({ success: false, message: 'Department not found' });
     }
@@ -26,7 +30,7 @@ exports.createTicket = async (req, res, next) => {
     const { start, end } = getDayBounds();
 
     const lastTicket = await Ticket.findOne({
-      where: { departmentId, createdAt: { [Op.between]: [start, end] } },
+      where: { departmentId: department.id, createdAt: { [Op.between]: [start, end] } },
       order: [['ticketNumber', 'DESC']]
     });
 
@@ -39,7 +43,7 @@ exports.createTicket = async (req, res, next) => {
       studentName: studentName || 'Студент',
       purposeKey:  finalPurposeKey,
       purpose:     finalPurposeKey,
-      departmentId,
+      departmentId: department.id,
       serviceTypeId: serviceTypeId || null,
       status: 'waiting'
     });
@@ -54,7 +58,7 @@ exports.createTicket = async (req, res, next) => {
     };
 
     try {
-      broadcastEvent('ticket:created', { ticket: ticketData, departmentId });
+      broadcastEvent('ticket:created', { ticket: ticketData, departmentId: department.id });
       logger.info(`Ticket created: ${ticketCode}`);
     } catch (e) {
       logger.warn('Failed to broadcast ticket:created event', { error: e?.message || e });
