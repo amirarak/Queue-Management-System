@@ -52,9 +52,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TicketPrinter from './TicketPrinter.vue'
+import { printAPI } from '@/services/api'
 
 const { t, te, locale } = useI18n()
 
@@ -98,15 +99,34 @@ async function handlePrint() {
   isPrinting.value = true
 
   try {
-    if (!printer.value) {
-      throw new Error('Принтер недоступен')
+    const createdAt = props.ticket.createdAt || new Date().toISOString()
+    const date = new Date(createdAt)
+    const payload = {
+      ticketCode: props.ticket.ticketCode,
+      ticketNumber: props.ticket.ticketNumber || props.ticket.number,
+      serviceName: translatedPurpose.value,
+      departmentName: props.ticket.department ? getDeptName(props.ticket.department) : '',
+      date: date.toLocaleDateString('ru-RU'),
+      time: date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
     }
 
-    await printer.value.print()
+    try {
+      const res = await printAPI.printTicket(payload)
+      if (res?.data?.success === false) {
+        throw new Error(res?.data?.message || 'Не удалось отправить талон на принтер')
+      }
+      return
+    } catch (serverPrintError) {
+      if (!printer.value) {
+        throw serverPrintError
+      }
+
+      await printer.value.print()
+    }
   } catch (error) {
     printError.value = error instanceof Error
       ? error.message
-      : 'Не удалось открыть печать'
+      : 'Не удалось напечатать талон'
   } finally {
     isPrinting.value = false
   }
@@ -115,7 +135,19 @@ async function handlePrint() {
 const countdown = ref(10)
 let timer = null
 
+async function autoPrintTicket() {
+  await nextTick()
+
+  if (isPrinting.value) {
+    return
+  }
+
+  await handlePrint()
+}
+
 onMounted(() => {
+  void autoPrintTicket()
+
   timer = setInterval(() => {
     countdown.value--
     if (countdown.value <= 0) {

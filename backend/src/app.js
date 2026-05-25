@@ -20,8 +20,13 @@ app.use(helmet());
 // trust proxy so express and middleware (like express-rate-limit) correctly
 // interpret the X-Forwarded-* headers. You can override by setting
 // PROXY_TRUST env var to a falsy value if needed.
-if (process.env.PROXY_TRUST !== 'false') {
+// Enable `trust proxy` only when explicitly requested or in production.
+// Leaving it enabled by default caused express-rate-limit to reject requests
+// in local dev (where the dev proxy / headers may be untrusted).
+if (process.env.PROXY_TRUST === 'true' || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', true);
+} else {
+  app.set('trust proxy', false);
 }
 
 function normalizeOrigin(value) {

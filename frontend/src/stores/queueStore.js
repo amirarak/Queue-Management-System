@@ -51,15 +51,30 @@ export const useQueueStore = defineStore('queue', () => {
     }
   }
 
-  async function generateTicket(studentName, purposeKey, departmentId, serviceTypeId = null) {
+  async function generateTicket(studentName, purposeKey, departmentId, serviceTypeId = null, departmentCode = null) {
     loading.value = true
     error.value   = null
     try {
-      const res = await ticketsAPI.create({
+      const normalizedServiceTypeId = Number.isInteger(serviceTypeId) && serviceTypeId > 0
+        ? serviceTypeId
+        : null
+
+      const payload = {
         studentName: studentName || 'Студент',
         purposeKey,
-        departmentId,
-        serviceTypeId
+        serviceTypeId: normalizedServiceTypeId
+      }
+
+      if (departmentId !== undefined && departmentId !== null) {
+        payload.departmentId = departmentId
+      }
+
+      if (departmentCode) {
+        payload.departmentCode = departmentCode
+      }
+
+      const res = await ticketsAPI.create({
+        ...payload
       })
       const ticket = res.data.data
       tickets.value.push(ticket)

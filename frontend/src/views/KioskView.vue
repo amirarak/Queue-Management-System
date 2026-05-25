@@ -57,8 +57,9 @@ function onDepartmentSelect(dept) {
 async function onServiceSelect(service) {
   ticketError.value = ''
   const departmentId = selectedDepartment.value?.id ?? selectedDepartment.value?.departmentId
+  const departmentCode = selectedDepartment.value?.code
 
-  if (!departmentId || !service?.purposeKey) {
+  if ((!departmentId && !departmentCode) || !service?.purposeKey) {
     ticketError.value = 'Не удалось определить услугу или факультет. Обновите страницу и попробуйте снова.'
     return
   }
@@ -67,7 +68,8 @@ async function onServiceSelect(service) {
     'Студент',
     service.purposeKey,
     departmentId,
-    service.id
+    null,
+    departmentCode
   )
   if (ticket) {
     createdTicket.value = ticket

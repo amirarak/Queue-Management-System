@@ -28,12 +28,12 @@ defineProps({ department: Object })
 defineEmits(['select', 'back'])
 
 const localizedServices = computed(() => [
-  { id: 1, purposeKey: 'services.certificate',      title: t('services.certificate') },
-  { id: 2, purposeKey: 'services.academicLeave',    title: t('services.academicLeave') },
-  { id: 3, purposeKey: 'services.transfer',         title: t('services.transfer') },
-  { id: 4, purposeKey: 'services.curriculumChange', title: t('services.curriculumChange') },
-  { id: 5, purposeKey: 'services.consultation',     title: t('services.consultation') },
-  { id: 6, purposeKey: 'services.other',            title: t('services.other') }
+  { purposeKey: 'services.certificate',      title: t('services.certificate') },
+  { purposeKey: 'services.academicLeave',    title: t('services.academicLeave') },
+  { purposeKey: 'services.transfer',         title: t('services.transfer') },
+  { purposeKey: 'services.curriculumChange', title: t('services.curriculumChange') },
+  { purposeKey: 'services.consultation',     title: t('services.consultation') },
+  { purposeKey: 'services.other',            title: t('services.other') }
 ])
 </script>
 
